@@ -1,3 +1,6 @@
+#ifndef PYTHONLIKE_STR_H
+#define PYTHONLIKE_STR_H
+
 #include <iostream>
 #include <string>
 #include <vector>
@@ -43,6 +46,14 @@ public:
 
     pystring operator+(const char * str) {
         return pystring(str_ + str);
+    }
+
+    pystring operator+(const int value) {
+        return pystring(str_ + std::to_string(value));
+    }
+
+    pystring operator+(const double value) {
+        return pystring(str_ + std::to_string(value));
     }
 
     void operator+=(pystring &str) {
@@ -217,3 +228,6 @@ public:
     }
 
 };
+
+
+#endif
