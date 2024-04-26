@@ -138,6 +138,32 @@ public:
         return this->split(pystring(delimiter).str());
     }
 
+    std::vector<pystring> split() {
+		std::vector<pystring> tokens;
+		size_t pos = 0;
+		int prev_pos = -1;
+
+		for (size_t i=0; i<str_.length();i++) {
+			if (i < prev_pos) continue;
+			if ((pos = std::min(str_.find("\n", i), std::min(str_.find(" ", i), str_.find("\t", i)))) != std::string::npos) {
+				if (i == pos) {
+					prev_pos = i;
+					continue;
+				}
+				else {
+					pystring substr = str_.substr(prev_pos+1, pos - prev_pos - 1);
+					if (substr.length()) {
+						tokens.push_back(substr);
+						prev_pos = pos;
+					}
+				}
+			}
+		}
+		pystring last_substr = str_.substr(prev_pos+1);
+		if (prev_pos < str_.length() && last_substr.length()) tokens.push_back(last_substr);
+		return tokens;
+	}
+
     pystring replace(std::string old_substr, std::string new_substr) {
         size_t pos = 0;
 		while ((pos = str_.find(old_substr, pos)) != std::string::npos) {
@@ -161,6 +187,25 @@ public:
             ret = "0" + ret;
         }
         return pystring(ret);
+    }
+
+    bool isdigit() {
+        for (char c : str_) if (!std::isdigit(c)) return false;
+	    return true;
+    }
+
+    pystring ljust(int length) {
+        std::string ret = str_;
+		if (str_.length()>=length) return str_;
+		for (int i=0;i<length-str_.length();i++) ret += " ";
+		return ret;
+    }
+
+    pystring rjust(int length) {
+        std::string ret = str_;
+		if (str_.length()>=length) return str_;
+		for (int i=0;i<length-str_.length();i++) ret = " " + ret;
+		return ret;
     }
 
     const std::string str() {
