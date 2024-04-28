@@ -60,7 +60,7 @@ public:
         return pystring(str_ + std::to_string(value));
     }
 
-    void operator+=(pystring &str) {
+    void operator+=(pystring str) {
         str_ += str.str();
     }
 
@@ -146,6 +146,7 @@ public:
 	        prev_pos = pos + delimiter.length();
 	    }
 	    if (prev_pos < str_.length()) tokens.push_back(pystring(str_.substr(prev_pos)));
+        if (endswith(delimiter)) tokens.push_back("");
 	    return tokens;
     }
 
@@ -259,7 +260,7 @@ public:
         return ret;
     }
 
-    
+
 };
 
 
