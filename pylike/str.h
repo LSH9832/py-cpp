@@ -48,6 +48,10 @@ public:
         return pystring(str_ + str);
     }
 
+    pystring operator+(const char c) {
+        return pystring(str_ + c);
+    }
+
     pystring operator+(const int value) {
         return pystring(str_ + std::to_string(value));
     }
@@ -66,6 +70,10 @@ public:
 
     void operator+=(const char * str) {
         str_ += str;
+    }
+
+    void operator+=(const char c) {
+        str_ += c;
     }
 
     char operator[](int idx){
@@ -227,6 +235,31 @@ public:
         return str_.c_str();
     }
 
+    pystring lower() {
+        pystring ret = "";
+        for (int i=0;i<str_.length();i++) {
+            int assic = str_[i];
+            if (assic < 123 && assic > 96) {
+                ret += (char)(assic - 32);
+            }
+            else ret += str_[i];
+        }
+        return ret;
+    }
+
+    pystring upper() {
+        pystring ret = "";
+        for (int i=0;i<str_.length();i++) {
+            int assic = str_[i];
+            if (assic < 91 && assic > 64) {
+                ret += (char)(assic + 32);
+            }
+            else ret += str_[i];
+        }
+        return ret;
+    }
+
+    
 };
 
 
