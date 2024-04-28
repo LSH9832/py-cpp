@@ -311,5 +311,7 @@ private:
 
 };
 
+Logger logger;
+
 
 #endif
