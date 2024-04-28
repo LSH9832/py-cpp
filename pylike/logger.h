@@ -92,16 +92,110 @@ struct SingleLog
 
 
 class Logger {
+public:
 
+    Logger() {
+        stdoutLog.level = Info;
+        stdoutLog.format = "[$TIME] | $LEVEL | $MSG";
+        stdoutLog.isStdout = true;
+        stdoutLog.decodeFormat();
+    }
+
+    void showStdout(bool enabled=true) {
+        show_ = enabled;
+    }
+
+    void setStdoutTimeFormat(pystring format) {
+        stdoutLog.timeformat = format;
+    }
+
+    void setStdoutLevel(LogLevel level) {
+        stdoutLog.level = level;
+    }
+
+    void setStdoutFormat(pystring format) {
+        stdoutLog.format = format;
+        stdoutLog.decodeFormat();
+    }
+
+    void setMsgColored(bool flag) {
+        msg_color = flag;
+    }
+
+
+    void add(pystring filepath, LogLevel level=Info, pystring format="", pystring timeformat="") {
+        SingleLog log2add;
+        log2add.filePath = filepath;
+        log2add.level = level;
+        log2add.format = format;
+        log2add.timeformat = timeformat;
+        log2add.decodeFormat();
+        logs.push_back(log2add);
+    }
+
+    void remove(pystring filepath) {
+        if (filepath.length()) {
+            std::vector<SingleLog> logs_;
+            for (int i=0;i<logs.size();i++) {
+                if (!(logs[i].filePath == filepath)) {
+                    logs_.push_back(logs[i]);
+                }
+            }
+            logs = logs_;
+        }
+    }
+
+    void debug(pystring debug_) {
+        writeOneLog(stdoutLog, Debug, debug_);
+        for (SingleLog& log: logs) {
+            writeOneLog(log, Debug, debug_);
+        }
+    }
+
+    void info(pystring info_) {
+        writeOneLog(stdoutLog, Info, info_);
+        for (SingleLog& log: logs) {
+            writeOneLog(log, Info, info_);
+        }
+    }
+
+    void warning(pystring warning_) {
+        writeOneLog(stdoutLog, Warning, warning_);
+        for (SingleLog& log: logs) {
+            writeOneLog(log, Warning, warning_);
+        }
+    }
+
+    void error(pystring error_) {
+        writeOneLog(stdoutLog, Error, error_);
+        for (SingleLog& log: logs) {
+            writeOneLog(log, Error, error_);
+        }
+    }
+
+    std::ostringstream& log(LogLevel level) {
+        oss.str("");
+        oss_level = level;
+        return oss;
+    }
+
+    pystring end() {
+        pystring oss_str = oss.str();
+        // oss.str("");
+        writeOneLog(stdoutLog, oss_level, oss_str);
+        for (SingleLog& log: logs) {
+            writeOneLog(log, oss_level, oss_str);
+        }
+        return "";
+    }
+
+private:
     std::vector<SingleLog> logs;
     SingleLog stdoutLog;
     bool msg_color = false;
 
     std::ostringstream oss;
     LogLevel oss_level = Info;
-
-    // LogLevel level_ = Info;
-    // pystring formats_ = "[$TIME] | $LEVEL | $MSG";
 
     bool show_ = true;
 
@@ -214,106 +308,6 @@ class Logger {
             // system(command.c_str());
         }
     }
-
-
-
-public:
-
-    Logger() {
-        stdoutLog.level = Info;
-        stdoutLog.format = "[$TIME] | $LEVEL | $MSG";
-        stdoutLog.isStdout = true;
-        stdoutLog.decodeFormat();
-    }
-
-    void showStdout(bool enabled=true) {
-        show_ = enabled;
-    }
-
-    void setStdoutTimeFormat(pystring format) {
-        stdoutLog.timeformat = format;
-    }
-
-    void setStdoutLevel(LogLevel level) {
-        stdoutLog.level = level;
-    }
-
-    void setStdoutFormat(pystring format) {
-        stdoutLog.format = format;
-        stdoutLog.decodeFormat();
-    }
-
-    void setMsgColored(bool flag) {
-        msg_color = flag;
-    }
-
-
-    void add(pystring filepath, LogLevel level=Info, pystring format="", pystring timeformat="") {
-        SingleLog log2add;
-        log2add.filePath = filepath;
-        log2add.level = level;
-        log2add.format = format;
-        log2add.timeformat = timeformat;
-        log2add.decodeFormat();
-        logs.push_back(log2add);
-    }
-
-    void remove(pystring filepath) {
-        if (filepath.length()) {
-            std::vector<SingleLog> logs_;
-            for (int i=0;i<logs.size();i++) {
-                if (!(logs[i].filePath == filepath)) {
-                    logs_.push_back(logs[i]);
-                }
-            }
-            logs = logs_;
-        }
-    }
-
-    void debug(pystring debug_) {
-        writeOneLog(stdoutLog, Debug, debug_);
-        for (SingleLog& log: logs) {
-            writeOneLog(log, Debug, debug_);
-        }
-    }
-
-    void info(pystring info_) {
-        writeOneLog(stdoutLog, Info, info_);
-        for (SingleLog& log: logs) {
-            writeOneLog(log, Info, info_);
-        }
-    }
-
-    void warning(pystring warning_) {
-        writeOneLog(stdoutLog, Warning, warning_);
-        for (SingleLog& log: logs) {
-            writeOneLog(log, Warning, warning_);
-        }
-    }
-
-    void error(pystring error_) {
-        writeOneLog(stdoutLog, Error, error_);
-        for (SingleLog& log: logs) {
-            writeOneLog(log, Error, error_);
-        }
-    }
-
-    std::ostringstream& log(LogLevel level) {
-        oss.str("");
-        oss_level = level;
-        return oss;
-    }
-
-    pystring end() {
-        pystring oss_str = oss.str();
-        // oss.str("");
-        writeOneLog(stdoutLog, oss_level, oss_str);
-        for (SingleLog& log: logs) {
-            writeOneLog(log, oss_level, oss_str);
-        }
-        return "";
-    }
-
 
 };
 
