@@ -276,13 +276,6 @@ private:
 
     struct _LogSet
     {
-        pystring Blue = "\033[34m";
-        pystring Yellow = "\033[33m";
-        pystring Green = "\033[32m";
-        pystring Red = "\033[31m";
-        pystring End = "\033[0m";
-        pystring Bold = "\033[1m";
-
         std::unordered_map<LogSettings, pystring> logset = {
             {LOG_COLOR_BLUE, "\033[34m"},
             {LOG_COLOR_GREEN, "\033[32m"},
@@ -357,7 +350,7 @@ private:
             }
             else if (c.content == SingleLog::Content::Msg)
             {
-                auto text = LogSet.setText(msg, LogSet.Bold);
+                auto text = LogSet.setText(msg, LOG_FONT_BOLD);
                 if (msg_color) text = LogSet.setText(text, levelColor_.at(level));
                 logstr += text;
             }
