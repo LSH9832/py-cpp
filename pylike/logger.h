@@ -7,10 +7,9 @@
 #include "./os.h"
 #include "./datetime.h"
 
-#define BLUE "\033[34m"   /* Blue   */
-#define YELLOW "\033[33m" /* Yellow */
-#define GREEN "\033[32m"  /* Green  */
-#define RED "\033[31m"    /* Red    */
+#define liststr std::vector<pystring>
+#define osp os::path
+#define LOG_BASEINFO (liststr{osp::basename(pystring(__FILE__)), std::to_string(__LINE__)})
 
 
 enum LogLevel
@@ -22,11 +21,22 @@ enum LogLevel
 };
 
 
+enum LogSettings {
+    LOG_COLOR_BLUE,
+    LOG_COLOR_GREEN,
+    LOG_COLOR_YELLOW,
+    LOG_COLOR_RED,
+    LOG_FONT_BOLD,
+    LOG_NORMAL,
+};
+
+
 struct SingleLog
 {
     enum Content {
         Time,
         Level,
+        BaseInfo,
         Msg,
         Other
     };
@@ -41,6 +51,7 @@ struct SingleLog
     pystring format;
     pystring timeformat = "%Y-%m-%d %H:%M:%S.%ms";
     std::vector<PartInfo> infos;
+    
 
     std::vector<PartInfo> _decodeFormat(std::vector<PartInfo> texts, pystring kw, Content ctype) {
         std::vector<PartInfo> ret;
@@ -74,14 +85,14 @@ struct SingleLog
     }
 
     void decodeFormat() {
-        if (!format.length() || format.empty()) format = "[$TIME] | $LEVEL | $MSG";
+        if (!format.length() || format.empty()) format = "$TIME | $LEVEL | $BASEINFO - $MSG";
         infos.clear();
         int count = 0;
         PartInfo info_;
         info_.content = Other;
         info_.text = format;
         infos = {info_};
-        for (pystring kw: {"$TIME", "$LEVEL", "$MSG"}) {
+        for (pystring kw: {"$TIME", "$LEVEL", "$BASEINFO", "$MSG"}) {
             infos = _decodeFormat(infos, kw, (Content)count);
             count++;
         }
@@ -95,8 +106,8 @@ class Logger {
 public:
 
     Logger() {
-        stdoutLog.level = Info;
-        stdoutLog.format = "[$TIME] | $LEVEL | $MSG";
+        stdoutLog.level = Debug;
+        stdoutLog.format = "$TIME | $LEVEL | $MSG";
         stdoutLog.isStdout = true;
         stdoutLog.decodeFormat();
     }
@@ -145,47 +156,53 @@ public:
         }
     }
 
-    void debug(pystring debug_) {
-        writeOneLog(stdoutLog, Debug, debug_);
-        for (SingleLog& log: logs) {
-            writeOneLog(log, Debug, debug_);
-        }
+    void log(LogLevel level, pystring msg, liststr baseinfo={}) {
+        baseinfo_ = baseinfo;
+        _log(level, msg);
     }
 
-    void info(pystring info_) {
-        writeOneLog(stdoutLog, Info, info_);
-        for (SingleLog& log: logs) {
-            writeOneLog(log, Info, info_);
-        }
+    void debug(pystring debug_, liststr baseinfo={}) {
+        log(Debug, debug_, baseinfo);
     }
 
-    void warning(pystring warning_) {
-        writeOneLog(stdoutLog, Warning, warning_);
-        for (SingleLog& log: logs) {
-            writeOneLog(log, Warning, warning_);
-        }
+    void info(pystring info_, liststr baseinfo={}) {
+        log(Info, info_, baseinfo);
     }
 
-    void error(pystring error_) {
-        writeOneLog(stdoutLog, Error, error_);
-        for (SingleLog& log: logs) {
-            writeOneLog(log, Error, error_);
-        }
+    void warning(pystring warning_, liststr baseinfo={}) {
+        log(Warning, warning_, baseinfo);
     }
 
-    std::ostringstream& log(LogLevel level) {
+    void error(pystring error_, liststr baseinfo={}) {
+        log(Error, error_, baseinfo);
+    }
+
+    std::ostringstream& log(LogLevel level, liststr baseinfo={}) {
         oss.str("");
+        baseinfo_ = baseinfo;
         oss_level = level;
         return oss;
     }
 
+    std::ostringstream& debug(liststr baseinfo={}) {
+        return log(Debug, baseinfo);
+    }
+
+    std::ostringstream& info(liststr baseinfo={}) {
+        return log(Info, baseinfo);
+    }
+
+    std::ostringstream& warning(liststr baseinfo={}) {
+        return log(Warning, baseinfo);
+    }
+
+    std::ostringstream& error(liststr baseinfo={}) {
+        return log(Error, baseinfo);
+    }
+
     pystring end() {
         pystring oss_str = oss.str();
-        // oss.str("");
-        writeOneLog(stdoutLog, oss_level, oss_str);
-        for (SingleLog& log: logs) {
-            writeOneLog(log, oss_level, oss_str);
-        }
+        _log(oss_level, oss_str);
         return "";
     }
 
@@ -193,6 +210,8 @@ private:
     std::vector<SingleLog> logs;
     SingleLog stdoutLog;
     bool msg_color = false;
+
+    liststr baseinfo_;
 
     std::ostringstream oss;
     LogLevel oss_level = Info;
@@ -208,10 +227,24 @@ private:
         pystring End = "\033[0m";
         pystring Bold = "\033[1m";
 
+        std::unordered_map<LogSettings, pystring> logset = {
+            {LOG_COLOR_BLUE, "\033[34m"},
+            {LOG_COLOR_GREEN, "\033[32m"},
+            {LOG_COLOR_YELLOW, "\033[33m"},
+            {LOG_COLOR_RED, "\033[31m"},
+            {LOG_FONT_BOLD, "\033[1m"},
+            {LOG_NORMAL, "\033[0m"}
+        };
+
         bool enabled = true;
 
-        pystring setText(pystring text, pystring logset) {
-            if (enabled) return logset + text + End;
+        pystring setText(pystring text, pystring logset_) {
+            if (enabled) return logset_ + text + logset.at(LOG_NORMAL);
+            else return text;
+        }
+
+        pystring setText(pystring text, LogSettings set_) {
+            if (enabled) return setText(text, logset.at(set_));
             else return text;
         }
 
@@ -284,6 +317,15 @@ private:
             {
                 logstr += timestr(log.timeformat);
             }
+            else if (c.content == SingleLog::Content::BaseInfo)
+            {
+                pystring info = "";
+                for (int i=0;i<baseinfo_.size();i++) {
+                    if (i) info += ":";
+                    info += baseinfo_[i];
+                }
+                logstr += LogSet.setText(info, LOG_COLOR_BLUE);
+            }
             else if (c.content == SingleLog::Content::Level)
             {
                 logstr += levelstr(level);
@@ -296,8 +338,6 @@ private:
             }
         }
 
-        
-        
         if (log.isStdout) {
             // printf(logstr.c_str());
             logstr += "\n";
@@ -306,6 +346,13 @@ private:
             pystring command = pystring("echo '") + logstr + "' >> " + log.filePath;
             popen(command.c_str(), "r");
             // system(command.c_str());
+        }
+    }
+
+    void _log(LogLevel level, pystring msg) {
+        writeOneLog(stdoutLog, level, msg);
+        for (SingleLog& log: logs) {
+            writeOneLog(log, level, msg);
         }
     }
 
