@@ -9,7 +9,8 @@
 
 #define liststr std::vector<pystring>
 #define osp os::path
-#define LOG_BASEINFO (liststr{osp::basename(pystring(__FILE__)), std::to_string(__LINE__)})
+#define LOG_LOCATION (liststr{osp::basename(pystring(__FILE__)), std::to_string(__LINE__)})
+#define LOG_DEFAULT_FORMAT "$TIME | $LEVEL  | $LOCATION - $MSG"
 
 
 enum LogLevel
@@ -26,6 +27,7 @@ enum LogSettings {
     LOG_COLOR_GREEN,
     LOG_COLOR_YELLOW,
     LOG_COLOR_RED,
+    LOG_COLOR_CYAN,
     LOG_FONT_BOLD,
     LOG_NORMAL,
 };
@@ -36,7 +38,7 @@ struct SingleLog
     enum Content {
         Time,
         Level,
-        BaseInfo,
+        Location,
         Msg,
         Other
     };
@@ -47,7 +49,7 @@ struct SingleLog
     };
     bool isStdout = false;
     pystring filePath;
-    LogLevel level;
+    LogLevel level=Info;
     pystring format;
     pystring timeformat = "%Y-%m-%d %H:%M:%S.%ms";
     std::vector<PartInfo> infos;
@@ -85,14 +87,14 @@ struct SingleLog
     }
 
     void decodeFormat() {
-        if (!format.length() || format.empty()) format = "$TIME | $LEVEL | $BASEINFO - $MSG";
+        if (!format.length() || format.empty()) format = LOG_DEFAULT_FORMAT;
         infos.clear();
         int count = 0;
         PartInfo info_;
         info_.content = Other;
         info_.text = format;
         infos = {info_};
-        for (pystring kw: {"$TIME", "$LEVEL", "$BASEINFO", "$MSG"}) {
+        for (pystring kw: {"$TIME", "$LEVEL", "$LOCATION", "$MSG"}) {
             infos = _decodeFormat(infos, kw, (Content)count);
             count++;
         }
@@ -107,7 +109,7 @@ public:
 
     Logger() {
         stdoutLog.level = Debug;
-        stdoutLog.format = "$TIME | $LEVEL | $MSG";
+        stdoutLog.format = LOG_DEFAULT_FORMAT;
         stdoutLog.isStdout = true;
         stdoutLog.decodeFormat();
     }
@@ -134,7 +136,20 @@ public:
     }
 
 
-    void add(pystring filepath, LogLevel level=Info, pystring format="", pystring timeformat="") {
+    void add(pystring filepath, LogLevel level=Info, pystring format="", pystring timeformat="", bool generate_path=true) {
+        
+
+        pystring dirname = osp::dirname(osp::abspath(filepath));
+        if (!osp::isdir(dirname)) {
+            if (generate_path) os::makedirs(dirname);
+            else {
+                error(LOG_LOCATION) << "path '" << dirname 
+                                    << "' not exist! Skip adding log file '" 
+                                    << filepath << "'." << end();
+                return;
+            }
+        }
+        
         SingleLog log2add;
         log2add.filePath = filepath;
         log2add.level = level;
@@ -156,48 +171,48 @@ public:
         }
     }
 
-    void log(LogLevel level, pystring msg, liststr baseinfo={}) {
-        baseinfo_ = baseinfo;
+    void log(LogLevel level, pystring msg, liststr location={}) {
+        location_ = location;
         _log(level, msg);
     }
 
-    void debug(pystring debug_, liststr baseinfo={}) {
-        log(Debug, debug_, baseinfo);
+    void debug(pystring debug_, liststr location={}) {
+        log(Debug, debug_, location);
     }
 
-    void info(pystring info_, liststr baseinfo={}) {
-        log(Info, info_, baseinfo);
+    void info(pystring info_, liststr location={}) {
+        log(Info, info_, location);
     }
 
-    void warning(pystring warning_, liststr baseinfo={}) {
-        log(Warning, warning_, baseinfo);
+    void warning(pystring warning_, liststr location={}) {
+        log(Warning, warning_, location);
     }
 
-    void error(pystring error_, liststr baseinfo={}) {
-        log(Error, error_, baseinfo);
+    void error(pystring error_, liststr location={}) {
+        log(Error, error_, location);
     }
 
-    std::ostringstream& log(LogLevel level, liststr baseinfo={}) {
+    std::ostringstream& log(LogLevel level, liststr location={}) {
         oss.str("");
-        baseinfo_ = baseinfo;
+        location_ = location;
         oss_level = level;
         return oss;
     }
 
-    std::ostringstream& debug(liststr baseinfo={}) {
-        return log(Debug, baseinfo);
+    std::ostringstream& debug(liststr location={}) {
+        return log(Debug, location);
     }
 
-    std::ostringstream& info(liststr baseinfo={}) {
-        return log(Info, baseinfo);
+    std::ostringstream& info(liststr location={}) {
+        return log(Info, location);
     }
 
-    std::ostringstream& warning(liststr baseinfo={}) {
-        return log(Warning, baseinfo);
+    std::ostringstream& warning(liststr location={}) {
+        return log(Warning, location);
     }
 
-    std::ostringstream& error(liststr baseinfo={}) {
-        return log(Error, baseinfo);
+    std::ostringstream& error(liststr location={}) {
+        return log(Error, location);
     }
 
     pystring end() {
@@ -209,9 +224,9 @@ public:
 private:
     std::vector<SingleLog> logs;
     SingleLog stdoutLog;
-    bool msg_color = false;
+    bool msg_color = true;
 
-    liststr baseinfo_;
+    liststr location_;
 
     std::ostringstream oss;
     LogLevel oss_level = Info;
@@ -232,6 +247,7 @@ private:
             {LOG_COLOR_GREEN, "\033[32m"},
             {LOG_COLOR_YELLOW, "\033[33m"},
             {LOG_COLOR_RED, "\033[31m"},
+            {LOG_COLOR_CYAN, "\033[36m"},
             {LOG_FONT_BOLD, "\033[1m"},
             {LOG_NORMAL, "\033[0m"}
         };
@@ -317,14 +333,14 @@ private:
             {
                 logstr += timestr(log.timeformat);
             }
-            else if (c.content == SingleLog::Content::BaseInfo)
+            else if (c.content == SingleLog::Content::Location)
             {
                 pystring info = "";
-                for (int i=0;i<baseinfo_.size();i++) {
+                for (int i=0;i<location_.size();i++) {
                     if (i) info += ":";
-                    info += baseinfo_[i];
+                    info += location_[i];
                 }
-                logstr += LogSet.setText(info, LOG_COLOR_BLUE);
+                logstr += LogSet.setText(info, LOG_COLOR_CYAN);
             }
             else if (c.content == SingleLog::Content::Level)
             {
