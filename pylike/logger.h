@@ -9,14 +9,16 @@
 
 #define liststr std::vector<pystring>
 #define osp os::path
-#define LOG_LOCATION (liststr{osp::basename(pystring(__FILE__)), std::to_string(__LINE__)})
-#define LOG_DEFAULT_FORMAT "$TIME | $LEVEL  | $LOCATION - $MSG"
+#define LOG_LOC (liststr{osp::basename(pystring(__FILE__)), std::to_string(__LINE__), pystring("<") + __func__ + ">"})
+#define LOG_ABSLOC (liststr{pystring(__FILE__), std::to_string(__LINE__), pystring("<") + __func__ + ">"})
+#define LOG_DEFAULT_FORMAT "$TIME | $LEVEL | $LOCATION - $MSG"
 
 
 enum LogLevel
 {
     Debug,
     Info,
+    Success,
     Warning,
     Error
 };
@@ -27,7 +29,9 @@ enum LogSettings {
     LOG_COLOR_GREEN,
     LOG_COLOR_YELLOW,
     LOG_COLOR_RED,
+    LOG_COLOR_PURPLE,
     LOG_COLOR_CYAN,
+    LOG_COLOR_WHITE,
     LOG_FONT_BOLD,
     LOG_NORMAL,
 };
@@ -131,19 +135,28 @@ public:
         stdoutLog.decodeFormat();
     }
 
+    void setLevelColor(LogLevel level_, LogSettings color_) {
+        levelColor_.at(level_) = color_;
+    }
+
+    void setTimeColor(LogSettings color_) {
+        timeColor_ = color_;
+    }
+
+    void setLocationColor(LogSettings color_) {
+        locationColor_ = color_;
+    }
+
     void setMsgColored(bool flag) {
         msg_color = flag;
     }
 
-
     void add(pystring filepath, LogLevel level=Info, pystring format="", pystring timeformat="", bool generate_path=true) {
-        
-
         pystring dirname = osp::dirname(osp::abspath(filepath));
         if (!osp::isdir(dirname)) {
             if (generate_path) os::makedirs(dirname);
             else {
-                error(LOG_LOCATION) << "path '" << dirname 
+                error(LOG_ABSLOC) << "path '" << dirname 
                                     << "' not exist! Skip adding log file '" 
                                     << filepath << "'." << end();
                 return;
@@ -184,6 +197,10 @@ public:
         log(Info, info_, location);
     }
 
+    void success(pystring info_, liststr location={}) {
+        log(Success, info_, location);
+    }
+
     void warning(pystring warning_, liststr location={}) {
         log(Warning, warning_, location);
     }
@@ -207,6 +224,10 @@ public:
         return log(Info, location);
     }
 
+    std::ostringstream& success(liststr location={}) {
+        return log(Success, location);
+    }
+
     std::ostringstream& warning(liststr location={}) {
         return log(Warning, location);
     }
@@ -224,6 +245,26 @@ public:
 private:
     std::vector<SingleLog> logs;
     SingleLog stdoutLog;
+
+    std::unordered_map<LogLevel, LogSettings> levelColor_ = {
+        {Debug, LOG_COLOR_BLUE},
+        {Info, LOG_FONT_BOLD},
+        {Success, LOG_COLOR_GREEN},
+        {Warning, LOG_COLOR_YELLOW},
+        {Error, LOG_COLOR_RED}
+    };
+
+    std::unordered_map<LogLevel, pystring> levelFlag_ = {
+        {Debug, "DEBUG   "},
+        {Info, "INFO    "},
+        {Success, "SUCCESS "},
+        {Warning, "WARNING "},
+        {Error, "ERROR   "}
+    };
+
+    LogSettings timeColor_ = LOG_COLOR_GREEN;
+    LogSettings locationColor_ = LOG_COLOR_CYAN;
+
     bool msg_color = true;
 
     liststr location_;
@@ -247,7 +288,9 @@ private:
             {LOG_COLOR_GREEN, "\033[32m"},
             {LOG_COLOR_YELLOW, "\033[33m"},
             {LOG_COLOR_RED, "\033[31m"},
+            {LOG_COLOR_PURPLE, "\033[35m"},
             {LOG_COLOR_CYAN, "\033[36m"},
+            {LOG_COLOR_WHITE, "\033[37m"},
             {LOG_FONT_BOLD, "\033[1m"},
             {LOG_NORMAL, "\033[0m"}
         };
@@ -271,61 +314,27 @@ private:
     pystring timestr(pystring format_) {
         pystring ret = "";
         auto date = datetime::datetime::now().strftime(format_);
-        ret = LogSet.setText(date, LogSet.Green);
+        ret = LogSet.setText(date, timeColor_);
         return ret;
     }
 
     pystring getColorByLevel(LogLevel level) {
-        pystring ret = LogSet.Green;
-        switch (level)
-        {
-        case Debug:
-            ret = LogSet.Blue;
-            break;
-        case Info:
-            ret = LogSet.Green;
-            break;
-        case Warning:
-            ret = LogSet.Yellow;
-            break;
-        case Error:
-            ret = LogSet.Red;
-            break;
-        }
-        return ret;
+        return LogSet.logset.at(levelColor_.at(level));
     }
 
     pystring levelstr(LogLevel level) {
-        pystring ret;
-        switch (level)
-        {
-        case Debug:
-            ret = LogSet.setText(LogSet.setText("DEBUG  ", LogSet.Blue), LogSet.Bold);
-            break;
-        case Info:
-            ret = LogSet.setText(LogSet.setText("INFO   ", LogSet.Green), LogSet.Bold);
-            break;
-        case Warning:
-            ret = LogSet.setText(LogSet.setText("WARNING", LogSet.Yellow), LogSet.Bold);
-            break;
-        case Error:
-            ret = LogSet.setText(LogSet.setText("ERROR  ", LogSet.Red), LogSet.Bold);
-            break;
-        }
-        return ret;
+        return LogSet.setText(LogSet.setText(levelFlag_.at(level), levelColor_.at(level)), LOG_FONT_BOLD);
     }
 
     void writeOneLog(SingleLog& log, LogLevel level, pystring msg) {
         if (log.isStdout && !show_) return;
+        if (level < log.level) return;
 
         LogSet.enabled = log.isStdout;
-
-        if (level < log.level) return;
 
         pystring logstr = "";
 
         for (auto c: log.infos) {
-
             if (c.content == SingleLog::Content::Other) {
                 logstr += c.text;
             }
@@ -338,9 +347,9 @@ private:
                 pystring info = "";
                 for (int i=0;i<location_.size();i++) {
                     if (i) info += ":";
-                    info += location_[i];
+                    info += LogSet.setText(location_[i], locationColor_);
                 }
-                logstr += LogSet.setText(info, LOG_COLOR_CYAN);
+                logstr += info; //LogSet.setText(info, locationColor_);
             }
             else if (c.content == SingleLog::Content::Level)
             {
@@ -349,7 +358,7 @@ private:
             else if (c.content == SingleLog::Content::Msg)
             {
                 auto text = LogSet.setText(msg, LogSet.Bold);
-                if (msg_color) text = LogSet.setText(text, getColorByLevel(level));
+                if (msg_color) text = LogSet.setText(text, levelColor_.at(level));
                 logstr += text;
             }
         }
