@@ -11,6 +11,8 @@
 #define liststr std::vector<pystring>
 #define osp os::path
 
+
+
 #define LOG_LOC (liststr{osp::basename(pystring(__FILE__)), std::to_string(__LINE__), pystring("<") + __func__ + ">"})
 #define LOG_ABSLOC (liststr{pystring(__FILE__), std::to_string(__LINE__), pystring("<") + __func__ + ">"})
 #define LOG_RELLOC (liststr{osp::relpath(pystring(__FILE__)), std::to_string(__LINE__), pystring("<") + __func__ + ">"})
@@ -30,6 +32,14 @@
 #define WARN logger.warning(LOG_LOC)
 #define ERROR logger.error(LOG_LOC)
 #define ENDL logger.end()
+
+#define logsetMsgColored logger.setMsgColored
+#define logsetStdoutLevel logger.setStdoutLevel
+#define logsetStdoutFormat logger.setStdoutFormat
+#define logsetStdoutTimeFormat logger.setStdoutTimeFormat
+#define logsetLevelColor logger.setLevelColor
+#define logsetLocationColor logger.setLocationColor
+#define logsetTimeColor logger.setTimeColor
 
 
 enum LogLevel
