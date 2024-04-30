@@ -3,15 +3,33 @@
 
 #include <cstdlib>
 #include <thread>
+#include <unordered_map>
 #include "./str.h"
 #include "./os.h"
 #include "./datetime.h"
 
 #define liststr std::vector<pystring>
 #define osp os::path
+
 #define LOG_LOC (liststr{osp::basename(pystring(__FILE__)), std::to_string(__LINE__), pystring("<") + __func__ + ">"})
 #define LOG_ABSLOC (liststr{pystring(__FILE__), std::to_string(__LINE__), pystring("<") + __func__ + ">"})
+#define LOG_RELLOC (liststr{osp::relpath(pystring(__FILE__)), std::to_string(__LINE__), pystring("<") + __func__ + ">"})
+
 #define LOG_DEFAULT_FORMAT "$TIME | $LEVEL | $LOCATION - $MSG"
+
+#define logadd logger.add
+#define logdebug(debug_) logger.debug((debug_), LOG_LOC)
+#define loginfo(info_) logger.info((info_), LOG_LOC)
+#define logsuccess(success_) logger.success((success_), LOG_LOC)
+#define logwarning(warning_) logger.warning((warning_), LOG_LOC)
+#define logerror(error_) logger.error((error_), LOG_LOC)
+
+#define DEBUG logger.debug(LOG_LOC)
+#define INFO logger.info(LOG_LOC)
+#define SUCCESS logger.success(LOG_LOC)
+#define WARN logger.warning(LOG_LOC)
+#define ERROR logger.error(LOG_LOC)
+#define ENDL logger.end()
 
 
 enum LogLevel
