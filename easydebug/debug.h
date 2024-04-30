@@ -1,20 +1,42 @@
 #ifndef EASYDEBUG_H
 #define EASYDEBUG_H
 
-#define BLUE "\033[34m"   /* Blue   */
-#define YELLOW "\033[33m" /* Yellow */
-#define GREEN "\033[32m"  /* Green  */
-#define RED "\033[31m"    /* Red    */
-#define END "\033[0m"
-#define ENDL "\033[0m" << std::endl
-
-#define DEBUG (std::cout << BLUE << "[DEBUG] ")
-#define WARN (std::cout << YELLOW << "[WARN] ")
-#define INFO (std::cout << GREEN << "[INFO] ")
-#define ERROR (std::cout << RED << "[ERROR] ") 
-
-#define MIN(a,b)  ((a) > (b) ? (b) : (a))
-#define MAX(a,b)  ((a) < (b) ? (b) : (a))
+#ifndef BLUE
+  #define BLUE "\033[34m"   /* Blue   */
+#endif
+#ifndef YELLOW
+  #define YELLOW "\033[33m" /* Yellow */
+#endif
+#ifndef GREEN
+  #define GREEN "\033[32m"  /* Green  */
+#endif
+#ifndef RED
+  #define RED "\033[31m"  /* Red  */
+#endif
+#ifndef END
+  #define END "\033[0m"
+#endif
+#ifndef ENDL
+  #define ENDL "\033[0m" << std::endl
+#endif
+#ifndef DEBUG
+  #define DEBUG (std::cout << BLUE << "[DEBUG] ")
+#endif
+#ifndef WARN
+  #define WARN (std::cout << YELLOW)
+#endif
+#ifndef INFO
+  #define INFO (std::cout << GREEN)
+#endif
+#ifndef ERROR
+  #define ERROR (std::cout << RED)
+#endif
+#ifndef MIN
+  #define MIN(a,b)  ((a) > (b) ? (b) : (a))
+#endif
+#ifndef MAX
+  #define MAX(a,b)  ((a) < (b) ? (b) : (a))
+#endif
 
 #include <sys/time.h>
 #include <cstddef>
