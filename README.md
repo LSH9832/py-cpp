@@ -12,13 +12,13 @@ now supports:
 int main()
 {
     // stdout settings
-    logsetMsgColored(true);
-    logsetStdoutLevel(Debug);
-    logsetLevelColor(Info, LOG_COLOR_PURPLE);
-    logsetStdoutFormat("$TIME | $LEVEL | $LOCATION - $MSG");
-    logsetStdoutTimeFormat("%Y%m%d %H:%M:%S");
-    logsetLocationColor(LOG_COLOR_PURPLE);
-    logsetTimeColor(LOG_COLOR_CYAN);
+    logsetMsgColored(true);   // default is true
+    logsetStdoutLevel(Debug); // default is Debug
+    logsetLevelColor(Info, LOG_COLOR_PURPLE);  // default is no color (gray)
+    logsetStdoutFormat("$TIME | $LEVEL | $LOCATION - $MSG");  // default is what this line shows
+    logsetStdoutTimeFormat("%Y%m%d %H:%M:%S"); // default is %Y%m%d %H:%M:%S.%ms
+    logsetLocationColor(LOG_COLOR_PURPLE);  // default is LOG_COLOR_CYAN
+    logsetTimeColor(LOG_COLOR_CYAN);  // default is LOG_COLOR_GREEN
 
     logadd("log/log.txt",  // log file
            Debug,   // log level, default is Info
