@@ -7,9 +7,65 @@
 #include <iomanip>
 #include <sstream>
 #include "./str.h"
+#include <time.h>
+#include <sys/time.h>
 
 
+namespace pytime {
 
+    double time() {
+        timeval _t;
+        gettimeofday(&_t, NULL);
+        double ret = (double)_t.tv_sec + (double)_t.tv_usec / 1000000.0;
+        return ret;
+    }
+
+    static void sleep(double sec) {
+        double t0 = pytime::time();
+        while (1) {
+            if (pytime::time()-t0 > sec) break;
+        }
+    }
+
+}
+
+
+class TimeCount {
+  std::vector<double> tics;
+  std::vector<double> tocs;
+
+public:
+  size_t length() {
+    return tics.size();
+  }
+
+  void tic(int idx) {
+    double now_time = pytime::time();
+    while (idx >= this->length()) {
+      tics.push_back(now_time);
+      tocs.push_back(now_time);
+    }
+    tics[idx] = now_time;
+    tocs[idx] = now_time;
+  }
+
+  int get_timeval(int idx) {
+    idx = MIN(idx, this->length()-1);
+    return 1000 * (tocs[idx] - tics[idx]);
+  }
+
+  double get_timeval_f(int idx) {
+    idx = MIN(idx, this->length()-1);
+    return 1000.0 * (tocs[idx] - tics[idx]);
+  }
+
+  int toc(int idx) {
+    idx = MIN(idx, this->length()-1);
+    tocs[idx] = pytime::time();
+    return this->get_timeval(idx);
+  }
+  
+};
 
 
 namespace datetime {

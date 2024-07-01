@@ -156,6 +156,8 @@ public:
         stdoutLog.format = LOG_DEFAULT_FORMAT;
         stdoutLog.isStdout = true;
         stdoutLog.decodeFormat();
+        LogSetFile.enabled = false;
+        LogSetStdOut.enabled = true;
     }
 
     void showStdout(bool enabled=true) {
@@ -367,36 +369,36 @@ private:
 
     };
 
-    _LogSet LogSet;
+    _LogSet LogSetFile, LogSetStdOut;
 
-    pystring timestr(pystring format_) {
+    pystring timestr(pystring format_, _LogSet LogSet) {
         pystring ret = "";
         auto date = datetime::datetime::now().strftime(format_);
         ret = LogSet.setText(date, timeColor_);
         return ret;
     }
 
-    pystring timestr(pystring format_, datetime::Datetime date_) {
+    pystring timestr(pystring format_, datetime::Datetime date_, _LogSet LogSet) {
         pystring ret = "";
         ret = LogSet.setText(date_.strftime(format_), timeColor_);
         return ret;
     }
 
-    pystring getColorByLevel(LogLevel level) {
+    pystring getColorByLevel(LogLevel level, _LogSet LogSet) {
         return LogSet.logset.at(levelColor_.at(level));
     }
 
-    pystring levelstr(LogLevel level) {
+    pystring levelstr(LogLevel level, _LogSet LogSet) {
         return LogSet.setText(LogSet.setText(levelFlag_.at(level), levelColor_.at(level)), LOG_FONT_BOLD);
     }
 
     void writeOneLog(SingleLog& log, LogLevel level, pystring msg, datetime::Datetime date, std::vector<pystring> location) {
         if (level < log.level) return;
         if (log.isStdout && !show_) return;
-        
-        LogSet.enabled = log.isStdout;
 
         pystring logstr = "";
+
+        _LogSet LogSet = log.isStdout?LogSetStdOut:LogSetFile;
 
         for (auto c: log.infos) {
             if (c.content == SingleLog::Content::Other) {
@@ -404,7 +406,7 @@ private:
             }
             else if (c.content == SingleLog::Content::Time)
             {
-                logstr += timestr(log.timeformat, date);
+                logstr += timestr(log.timeformat, date, LogSet);
             }
             else if (c.content == SingleLog::Content::Location)
             {
@@ -413,6 +415,7 @@ private:
                     if(!i) {
                         if (log.pathtype == LOG_PATH_BASE) location[i] = osp::basename(location[i]);
                         else if (log.pathtype == LOG_PATH_REL) location[i] = osp::relpath(location[i]);
+                        else location[i] = location[i].replace("/./", "/");
                     }
                     else if(!log.showFuncName && i == location.size()-1) continue;
                     if (i) info += ":";
@@ -422,7 +425,7 @@ private:
             }
             else if (c.content == SingleLog::Content::Level)
             {
-                logstr += levelstr(level);
+                logstr += levelstr(level, LogSet);
             }
             else if (c.content == SingleLog::Content::Msg)
             {
@@ -465,6 +468,9 @@ private:
         datetime::Datetime d = datetime::datetime::now();
         std::vector<pystring> loc = location_;
         writeOneLog(stdoutLog, level, msg, d, loc);
+
+        // std::thread _ts(std::mem_fn(&Logger::writeOneLog), this, std::ref(stdoutLog), level, msg, d, loc);
+        // _ts.detach();
         std::thread _t(std::mem_fn(&Logger::__logfile), this, level, msg, d, loc);
         _t.detach();
     }
