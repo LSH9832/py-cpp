@@ -37,6 +37,8 @@ int main()
     ERROR << "feels bad" << 555 << ENDL;
     DEBUG << "find something wrong" << ENDL;
     SUCCESS << "done!" << 5.678 << ENDL;
+
+    return 0;
 }
 ```
 
