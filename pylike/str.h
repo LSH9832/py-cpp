@@ -86,33 +86,61 @@ public:
         return str_[idx<0?str_.length()+idx:idx];
     }
 
-    bool startswith(const std::string& prefix) {
-		size_t str_len = str_.length();
-		size_t prefix_len = prefix.length();
-		if (prefix_len > str_len) return false;
-		return str_.find(prefix) == 0;
-	}
+    operator int() const {
+        return std::atoi(str_.c_str());
+    }
 
-	bool endswith(const std::string& suffix) {
-		size_t str_len = str_.length();
-		size_t suffix_len = suffix.length();
-		if (suffix_len > str_len) return false;
-		return (str_.find(suffix, str_len - suffix_len) == (str_len - suffix_len));
-	}
+    operator float() const {
+        return std::atof(str_.c_str());
+    }
+
+    operator double() const {
+        return std::atof(str_.c_str());
+    }
+
+    operator std::string() const {
+        return str_;
+    }
+
+    operator bool() const {
+        auto s = pystring(str_).lower().str();
+        if (s == "false" || s == "0")
+        {
+            return false;
+        }
+        else if (s == "true" || s == "1")
+        {
+            return true;
+        }
+    }
+
+    bool startswith(const std::string& prefix) {
+        size_t str_len = str_.length();
+        size_t prefix_len = prefix.length();
+        if (prefix_len > str_len) return false;
+        return str_.find(prefix) == 0;
+    }
+
+    bool endswith(const std::string& suffix) {
+        size_t str_len = str_.length();
+        size_t suffix_len = suffix.length();
+        if (suffix_len > str_len) return false;
+        return (str_.find(suffix, str_len - suffix_len) == (str_len - suffix_len));
+    }
 
     bool startswith(pystring &prefix) {
-		size_t str_len = str_.length();
-		size_t prefix_len = prefix.str().length();
-		if (prefix_len > str_len) return false;
-		return str_.find(prefix.str()) == 0;
-	}
+        size_t str_len = str_.length();
+        size_t prefix_len = prefix.str().length();
+        if (prefix_len > str_len) return false;
+        return str_.find(prefix.str()) == 0;
+    }
 
-	bool endswith(pystring &suffix) {
-		size_t str_len = str_.length();
-		size_t suffix_len = suffix.str().length();
-		if (suffix_len > str_len) return false;
-		return (str_.find(suffix.str(), str_len - suffix_len) == (str_len - suffix_len));
-	}
+    bool endswith(pystring &suffix) {
+        size_t str_len = str_.length();
+        size_t suffix_len = suffix.str().length();
+        if (suffix_len > str_len) return false;
+        return (str_.find(suffix.str(), str_len - suffix_len) == (str_len - suffix_len));
+    }
 
     inline char &at(size_t idx) {
         return str_.at(idx);
@@ -165,7 +193,7 @@ public:
     }
 
     std::vector<pystring> split() {
-		std::vector<pystring> tokens;
+        std::vector<pystring> tokens;
 		size_t pos = 0;
 		int prev_pos = -1;
 
