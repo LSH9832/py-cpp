@@ -1,3 +1,4 @@
+#pragma once
 #ifndef PYLIKE_DATETIME_H
 #define PYLIKE_DATETIME_H
 
@@ -13,7 +14,7 @@
 
 namespace pytime {
 
-    double time() {
+    static double time() {
         timeval _t;
         gettimeofday(&_t, NULL);
         double ret = (double)_t.tv_sec + (double)_t.tv_usec / 1000000.0;
@@ -129,7 +130,7 @@ namespace datetime {
 
     namespace datetime {
 
-        Datetime now() {
+        static Datetime now() {
             return Datetime();
         }
     }

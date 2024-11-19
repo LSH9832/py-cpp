@@ -1,15 +1,19 @@
+#pragma once
 #ifndef PYLIKE_LOGGER_H
 #define PYLIKE_LOGGER_H
 
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <string>
+#include <sstream>
 #include <thread>
 #include <unordered_map>
 #include "./str.h"
 #include "./os.h"
 #include "./datetime.h"
 #include <functional>
+
 
 #define liststr std::vector<pystring>
 #define osp os::path
@@ -32,7 +36,9 @@
 #define SUCCESS logger.success(LOG_LOC)
 #define WARN logger.warning(LOG_LOC)
 #define ERROR logger.error(LOG_LOC)
+#define CONTINUELOG logger.info({}, false)
 #define ENDL logger.end()
+#define ENDLOG logger.end();
 
 #define logsetMsgColored logger.setMsgColored
 #define logsetStdoutLevel logger.setStdoutLevel
@@ -42,15 +48,17 @@
 #define logsetLocationColor logger.setLocationColor
 #define logsetTimeColor logger.setTimeColor
 #define logsetStdoutFuncNameShow logger.setStdoutFuncNameShow
+#define logsetShowLocation logger.setLocationShow
+
 
 
 enum LogLevel
 {
-    Debug,
-    Info,
-    Success,
-    Warning,
-    Error
+    LOG_LEVEL_DEBUG,
+    LOG_LEVEL_INFO,
+    LOG_LEVEL_SUCCESS,
+    LOG_LEVEL_WARNING,
+    LOG_LEVEL_ERROR
 };
 
 
@@ -91,7 +99,7 @@ struct SingleLog
     bool isStdout = false;
     bool showFuncName = true;
     pystring filePath;
-    LogLevel level=Info;
+    LogLevel level=LOG_LEVEL_INFO;
     pystring format;
     pystring timeformat = "%Y-%m-%d %H:%M:%S.%ms";
     std::vector<PartInfo> infos;
@@ -152,7 +160,7 @@ class Logger {
 public:
 
     Logger() {
-        stdoutLog.level = Debug;
+        stdoutLog.level = LOG_LEVEL_DEBUG;
         stdoutLog.format = LOG_DEFAULT_FORMAT;
         stdoutLog.isStdout = true;
         stdoutLog.decodeFormat();
@@ -177,7 +185,7 @@ public:
     }
 
     void setStdoutLevel(int level) {
-        level = MIN((int)Error, level);
+        level = MIN((int)LOG_LEVEL_ERROR, level);
         stdoutLog.level = (LogLevel)level;
     }
 
@@ -202,7 +210,11 @@ public:
         msg_color = flag;
     }
 
-    bool add(pystring filepath, LogLevel level=Info, pystring format="", pystring timeformat="", bool generate_path=true) {
+    void setLocationShow(bool flag) {
+        show_location = flag;
+    }
+
+    bool add(pystring filepath, LogLevel level=LOG_LEVEL_INFO, pystring format="", pystring timeformat="", bool generate_path=true) {
         if (!filepath.length()) return false;
         pystring dirname = osp::dirname(osp::abspath(filepath));
         if (!osp::isdir(dirname)) {
@@ -243,50 +255,53 @@ public:
     }
 
     void debug(pystring debug_, liststr location={}) {
-        log(Debug, debug_, location);
+        log(LOG_LEVEL_DEBUG, debug_, location);
     }
 
     void info(pystring info_, liststr location={}) {
-        log(Info, info_, location);
+        log(LOG_LEVEL_INFO, info_, location);
     }
 
     void success(pystring info_, liststr location={}) {
-        log(Success, info_, location);
+        log(LOG_LEVEL_SUCCESS, info_, location);
     }
 
     void warning(pystring warning_, liststr location={}) {
-        log(Warning, warning_, location);
+        log(LOG_LEVEL_WARNING, warning_, location);
     }
 
     void error(pystring error_, liststr location={}) {
-        log(Error, error_, location);
+        log(LOG_LEVEL_ERROR, error_, location);
     }
 
-    std::ostringstream& log(LogLevel level, liststr location={}) {
-        oss.str("");
-        location_ = location;
-        oss_level = level;
+    std::ostringstream& log(LogLevel level, liststr location={}, bool clear=true) {
+        if (clear)
+        {
+            oss.str("");
+            location_ = location;
+            oss_level = level;
+        }
         return oss;
     }
 
-    std::ostringstream& debug(liststr location={}) {
-        return log(Debug, location);
+    std::ostringstream& debug(liststr location={}, bool clear=true) {
+        return log(LOG_LEVEL_DEBUG, location, clear);
     }
 
-    std::ostringstream& info(liststr location={}) {
-        return log(Info, location);
+    std::ostringstream& info(liststr location={}, bool clear=true) {
+        return log(LOG_LEVEL_INFO, location, clear);
     }
 
-    std::ostringstream& success(liststr location={}) {
-        return log(Success, location);
+    std::ostringstream& success(liststr location={}, bool clear=true) {
+        return log(LOG_LEVEL_SUCCESS, location, clear);
     }
 
-    std::ostringstream& warning(liststr location={}) {
-        return log(Warning, location);
+    std::ostringstream& warning(liststr location={}, bool clear=true) {
+        return log(LOG_LEVEL_WARNING, location, clear);
     }
 
-    std::ostringstream& error(liststr location={}) {
-        return log(Error, location);
+    std::ostringstream& error(liststr location={}, bool clear=true) {
+        return log(LOG_LEVEL_ERROR, location, clear);
     }
 
     pystring end() {
@@ -310,23 +325,24 @@ public:
     }
 
 private:
+    bool show_location=true;
     std::vector<SingleLog> logs;
     SingleLog stdoutLog;
 
     std::unordered_map<LogLevel, LogSettings> levelColor_ = {
-        {Debug, LOG_COLOR_BLUE},
-        {Info, LOG_FONT_BOLD},
-        {Success, LOG_COLOR_GREEN},
-        {Warning, LOG_COLOR_YELLOW},
-        {Error, LOG_COLOR_RED}
+        {LOG_LEVEL_DEBUG, LOG_COLOR_BLUE},
+        {LOG_LEVEL_INFO, LOG_FONT_BOLD},
+        {LOG_LEVEL_SUCCESS, LOG_COLOR_GREEN},
+        {LOG_LEVEL_WARNING, LOG_COLOR_YELLOW},
+        {LOG_LEVEL_ERROR, LOG_COLOR_RED}
     };
 
     std::unordered_map<LogLevel, pystring> levelFlag_ = {
-        {Debug, "DEBUG   "},
-        {Info, "INFO    "},
-        {Success, "SUCCESS "},
-        {Warning, "WARNING "},
-        {Error, "ERROR   "}
+        {LOG_LEVEL_DEBUG, "DEBUG   "},
+        {LOG_LEVEL_INFO, "INFO    "},
+        {LOG_LEVEL_SUCCESS, "SUCCESS "},
+        {LOG_LEVEL_WARNING, "WARNING "},
+        {LOG_LEVEL_ERROR, "ERROR   "}
     };
 
     LogSettings timeColor_ = LOG_COLOR_GREEN;
@@ -337,7 +353,7 @@ private:
     liststr location_;
 
     std::ostringstream oss;
-    LogLevel oss_level = Info;
+    LogLevel oss_level = LOG_LEVEL_INFO;
 
     bool show_ = true;
 
@@ -410,6 +426,7 @@ private:
             }
             else if (c.content == SingleLog::Content::Location)
             {
+                if (!show_location) continue;
                 pystring info = "";
                 for (int i=0;i<location.size();i++) {
                     if(!i) {
@@ -477,7 +494,7 @@ private:
 
 };
 
-Logger logger;
+static Logger logger;
 
 
 #endif

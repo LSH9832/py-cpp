@@ -1,3 +1,4 @@
+#pragma once
 #ifndef PYTHONLIKE_STR_H
 #define PYTHONLIKE_STR_H
 
@@ -83,34 +84,6 @@ public:
 
     char operator[](int idx){
         return str_[idx<0?str_.length()+idx:idx];
-    }
-
-    operator int() const {
-        return std::atoi(str_.c_str());
-    }
-
-    operator float() const {
-        return std::atof(str_.c_str());
-    }
-
-    operator double() const {
-        return std::atof(str_.c_str());
-    }
-
-    operator std::string() const {
-        return str_;
-    }
-
-    operator bool() const {
-        auto s = pystring(str_).lower().str();
-        if (s == "false" || s == "0")
-        {
-            return false;
-        }
-        else if (s == "true" || s == "1")
-        {
-            return true;
-        }
     }
 
     bool startswith(const std::string& prefix) {

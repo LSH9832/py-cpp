@@ -1,3 +1,4 @@
+#pragma once
 #ifndef PYTHONLIKE_OS_H
 #define PYTHONLIKE_OS_H
 
@@ -23,7 +24,7 @@ bool pyin(T element, std::vector<T> list) {
 }
 
 
-pystring _pycwd_() {
+static pystring _pycwd_() {
     // char buff[FILENAME_MAX];
     char* buff;//= new char[FILENAME_MAX];
     pystring currPath = getcwd(buff, FILENAME_MAX);
@@ -61,11 +62,11 @@ T pymax(std::vector<T> elements) {
 
 namespace os {
 
-    pystring getcwd() {
+    static pystring getcwd() {
         return _pycwd_();
     }
 
-    int cpu_count() {
+    static int cpu_count() {
         int count = 1;
 
 #if defined(_SC_NPROCESSORS_ONLN)
@@ -83,7 +84,7 @@ namespace os {
 
     namespace path {
 
-        pystring join(std::vector<pystring> paths) {
+        static pystring join(std::vector<pystring> paths) {
             pystring joined_path = paths[0];
             if (!joined_path.empty() && joined_path.back() == '/') {
                 joined_path.pop_back();
@@ -101,13 +102,13 @@ namespace os {
             return pystring(joined_path).replace("/./", "/");
         }
 
-        pystring basename(pystring path) {
+        static pystring basename(pystring path) {
             path = path.replace("\\", "/");
             std::vector<pystring> ps_ = path.split("/");
             return ps_[ps_.size()-1];
         }
 
-        pystring abspath(pystring path) {
+        static pystring abspath(pystring path) {
             path = path.replace("\\", "/");
             if (path.startswith("/")) {
                 return path;
@@ -126,9 +127,9 @@ namespace os {
             return currPath.replace("/./", "/");
         }
 
-        pystring relpath(pystring path) {
+        static pystring relpath(pystring path, pystring rpath="") {
             auto paths = abspath(path).split("/");
-            auto cwdpaths = os::getcwd().split("/");
+            auto cwdpaths = (rpath.length()?rpath:os::getcwd()).split("/");
             int i = 0;
             int count = pymin(paths.size(), cwdpaths.size());
 
@@ -150,7 +151,7 @@ namespace os {
             return ret.replace("/./", "/");
         }
 
-        pystring dirname(pystring path) {
+        static pystring dirname(pystring path) {
             path = path.replace("\\", "/");
             std::vector<pystring> ps_ = path.split("/");
             pystring ret = "";
@@ -161,7 +162,7 @@ namespace os {
             return ret.replace("/./", "/");
         }
 
-        bool isdir(pystring path) {
+        static bool isdir(pystring path) {
             struct stat info;
             if (stat(path.c_str(), &info) != 0) {
                 return false; // 目录不存在
@@ -172,7 +173,7 @@ namespace os {
             }
         }
 
-        bool isfile(pystring path) {
+        static bool isfile(pystring path) {
             struct stat info;
             if (stat(path.c_str(), &info) != 0) {
                 return false; // 目录不存在
@@ -183,7 +184,7 @@ namespace os {
             }
         }
 
-        bool exist(pystring path) {
+        static bool exist(pystring path) {
             struct stat info;
             return (stat(path.c_str(), &info) == 0);
         }
@@ -280,7 +281,7 @@ namespace os {
 
     
 
-    void makedirs(pystring path_) {
+    static void makedirs(pystring path_) {
         std::string path = path_.str();
         std::string _path = "";
         bool hasLetter=false;
