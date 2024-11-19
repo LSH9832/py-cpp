@@ -13,15 +13,15 @@ int main()
 {
     // stdout settings
     logsetMsgColored(true);   // default is true
-    logsetStdoutLevel(Debug); // default is Debug
-    logsetLevelColor(Info, LOG_COLOR_PURPLE);  // default is no color (gray)
+    logsetStdoutLevel(LOG_LEVEL_DEBUG); // default is Debug
+    logsetLevelColor(LOG_LEVEL_INFO, LOG_COLOR_PURPLE);  // default is no color (gray)
     logsetStdoutFormat("$TIME | $LEVEL | $LOCATION - $MSG");  // default is what this line shows
     logsetStdoutTimeFormat("%Y%m%d %H:%M:%S"); // default is %Y%m%d %H:%M:%S.%ms
     logsetLocationColor(LOG_COLOR_PURPLE);  // default is LOG_COLOR_CYAN
     logsetTimeColor(LOG_COLOR_CYAN);  // default is LOG_COLOR_GREEN
 
     logadd("log/log.txt",  // log file
-           Debug,   // log level, default is Info
+           LOG_LEVEL_DEBUG,   // log level, default is Info
            "$TIME | $LEVEL | $LOCATION - $MSG",   // default format
            "%Y-%m-%d %H:%M:%S.%ms",   // default time format
            true);                   // makedirs while dirpath is not exist, default is true 
