@@ -126,7 +126,7 @@ public:
         }
     }
 
-    pystring operator*(const int value) {
+    pystring operator*(int value) {
         std::ostringstream oss;
         if(str_.size())
         {
@@ -138,7 +138,7 @@ public:
         return pystring(oss.str());
     }
 
-    void operator*=(const int value) {
+    void operator*=(int value) {
         std::ostringstream oss;
         if(str_.size())
         {
@@ -148,10 +148,6 @@ public:
             }
         }
         str_ = oss.str();
-    }
-
-    char operator[](int idx){
-        return str_[idx<0?str_.length()+idx:idx];
     }
 
     bool startswith(const std::string& prefix) {
