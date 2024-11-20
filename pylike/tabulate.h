@@ -160,7 +160,7 @@ namespace tabulate
             // std::cout << head_.size() << std::endl;
             
             // 获取列的最大宽度
-            std::vector<size_t> colWidths;
+            std::vector<int> colWidths;
             for (const auto& col : head_) 
             {
                 colWidths.push_back(col.size());
@@ -172,7 +172,7 @@ namespace tabulate
                     colWidths.push_back(0);
                 }
 
-                for (size_t i = 0; i < row.size(); ++i) 
+                for (int i = 0; i < row.size(); ++i) 
                 {
                     if (row[i].size() > colWidths[i]) 
                     {
@@ -261,7 +261,7 @@ namespace tabulate
             {TABLE_STYLE_FANCY_OUTLINE, {"╒","═","╤","╕","│","│","╞","═","╪","╡","│","│","","","","","╘","═","╧","╛"}}
         };
 
-        std::string drawRow(const std::vector<std::string>& style, const std::vector<std::string>& row, const std::vector<size_t>& colWidths, bool isHeader) {
+        std::string drawRow(const std::vector<std::string>& style, const std::vector<std::string>& row, const std::vector<int>& colWidths, bool isHeader) {
             std::ostringstream oss;
             int start_idx = isHeader?4:10;
             // 绘制左竖杠
@@ -269,7 +269,7 @@ namespace tabulate
             std::string middle_split = style[start_idx+1];
 
             // 绘制每个单元格
-            for (size_t i = 0; i < row.size(); ++i) {
+            for (int i = 0; i < row.size(); ++i) {
                 // 填充空格以达到最大宽度
                 if (i)
                 {
@@ -295,21 +295,21 @@ namespace tabulate
             return oss.str();
         }
  
-        std::string drawSeparator(const std::vector<std::string>& style, const std::vector<size_t>& colWidths, int flag) {
+        std::string drawSeparator(const std::vector<std::string>& style, const std::vector<int>& colWidths, int flag) {
             std::ostringstream oss;
 
             int start_idx = (flag==3)?16:(flag * 6);
 
             // left split
             oss << style[start_idx];
-            for (size_t i=0;i<colWidths.size();i++) 
+            for (int i=0;i<colWidths.size();i++) 
             {
                 if (i)
                 {
                     // middle split
                     oss << style[start_idx+2];
                 }
-                oss << (pystring(style[start_idx+1])*(colWidths[i]+2));  // +2 是因为两边有边框字符
+                oss << (pystring(style[start_idx+1])*(2+colWidths[i]));  // +2 是因为两边有边框字符
             }
             // right split
             oss << style[start_idx+3];
