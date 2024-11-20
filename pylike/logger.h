@@ -40,6 +40,8 @@
 #define CONTINUELOG logger.info({}, false)
 #define ENDL logger.end()
 #define ENDLOG logger.end();
+#define LOGSHOW logger.end(false)
+#define LOGSHOW_IGNORE_LEVEL logger.end(false, true)
 
 #define logsetMsgColored logger.setMsgColored
 #define logsetStdoutLevel logger.setStdoutLevel
@@ -50,6 +52,7 @@
 #define logsetTimeColor logger.setTimeColor
 #define logsetStdoutFuncNameShow logger.setStdoutFuncNameShow
 #define logsetShowLocation logger.setLocationShow
+
 #define logsetFromParser logger.setFromParser
 #define logadd2Parser logger.addLogParser
 #define logaddAndSetFromParser logger.addAndSetFromParser
@@ -307,9 +310,9 @@ public:
         return log(LOG_LEVEL_ERROR, location, clear);
     }
 
-    pystring end() {
+    pystring end(bool write2file=true, bool force_show=false) {
         pystring oss_str = oss.str();
-        _log(oss_level, oss_str);
+        _log(oss_level, oss_str, write2file, force_show);
         return "";
     }
 
@@ -341,7 +344,7 @@ public:
             error("no required option, please check" ,LOG_LOC);
             return;
         }
-        
+
         std::string logfile = parser.get_option_string("--add-log");
         int level = parser.get_option_int("--log-level");
         setStdoutLevel(parser.get_option_int("--show-level"));
@@ -365,8 +368,6 @@ public:
             filelogger->pathtype = LOG_PATH_ABS;
         }
     }
-
-    
 
 private:
     bool show_location=true;
@@ -452,8 +453,8 @@ private:
         return LogSet.setText(LogSet.setText(levelFlag_.at(level), levelColor_.at(level)), LOG_FONT_BOLD);
     }
 
-    void writeOneLog(SingleLog& log, LogLevel level, pystring msg, datetime::Datetime date, std::vector<pystring> location) {
-        if (level < log.level) return;
+    void writeOneLog(SingleLog& log, LogLevel level, pystring msg, datetime::Datetime date, std::vector<pystring> location, bool force_show=false) {
+        if (level < log.level && !force_show) return;
         if (log.isStdout && !show_) return;
 
         pystring logstr = "";
@@ -525,15 +526,19 @@ private:
         }
     }
 
-    void _log(LogLevel level, pystring msg) {
+    void _log(LogLevel level, pystring msg, bool write2file=true, bool force_show=false) {
         datetime::Datetime d = datetime::datetime::now();
         std::vector<pystring> loc = location_;
-        writeOneLog(stdoutLog, level, msg, d, loc);
+        writeOneLog(stdoutLog, level, msg, d, loc, force_show);
 
         // std::thread _ts(std::mem_fn(&Logger::writeOneLog), this, std::ref(stdoutLog), level, msg, d, loc);
         // _ts.detach();
-        std::thread _t(std::mem_fn(&Logger::__logfile), this, level, msg, d, loc);
-        _t.detach();
+        if(write2file)
+        {
+            std::thread _t(std::mem_fn(&Logger::__logfile), this, level, msg, d, loc);
+            _t.detach();
+        }
+        
     }
 
 };
