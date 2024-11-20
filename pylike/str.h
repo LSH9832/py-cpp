@@ -30,6 +30,18 @@ public:
         str_ = str;
     }
 
+    pystring(int str)
+    {
+        str_ = std::to_string(str);
+    }
+
+    pystring(double str)
+    {
+        str_ = std::to_string(str);
+    }
+
+    // pystring(std::vector<int> )
+
     bool operator==(pystring &str) {
         return str_ == str.str();
     }
@@ -114,6 +126,34 @@ public:
         }
     }
 
+    pystring operator*(const int value) {
+        std::ostringstream oss;
+        if(str_.size())
+        {
+            for(int i=0;i<value;i++)
+            {
+                oss << str_;
+            }
+        }
+        return pystring(oss.str());
+    }
+
+    void operator*=(const int value) {
+        std::ostringstream oss;
+        if(str_.size())
+        {
+            for(int i=0;i<value;i++)
+            {
+                oss << str_;
+            }
+        }
+        str_ = oss.str();
+    }
+
+    char operator[](int idx){
+        return str_[idx<0?str_.length()+idx:idx];
+    }
+
     bool startswith(const std::string& prefix) {
         size_t str_len = str_.length();
         size_t prefix_len = prefix.length();
@@ -173,15 +213,15 @@ public:
 
     std::vector<pystring> split(std::string delimiter) {
         std::vector<pystring> tokens;
-	    size_t pos = 0;
-	    std::string::size_type prev_pos = 0;
-	    while ((pos = str_.find(delimiter, prev_pos)) != std::string::npos) {
-	        tokens.push_back(pystring(str_.substr(prev_pos, pos - prev_pos)));
-	        prev_pos = pos + delimiter.length();
-	    }
-	    if (prev_pos < str_.length()) tokens.push_back(pystring(str_.substr(prev_pos)));
+        size_t pos = 0;
+        std::string::size_type prev_pos = 0;
+        while ((pos = str_.find(delimiter, prev_pos)) != std::string::npos) {
+            tokens.push_back(pystring(str_.substr(prev_pos, pos - prev_pos)));
+            prev_pos = pos + delimiter.length();
+        }
+        if (prev_pos < str_.length()) tokens.push_back(pystring(str_.substr(prev_pos)));
         if (endswith(delimiter)) tokens.push_back("");
-	    return tokens;
+        return tokens;
     }
 
     std::vector<pystring> split(pystring delimiter) {
@@ -194,37 +234,37 @@ public:
 
     std::vector<pystring> split() {
         std::vector<pystring> tokens;
-		size_t pos = 0;
-		int prev_pos = -1;
+        size_t pos = 0;
+        int prev_pos = -1;
 
-		for (size_t i=0; i<str_.length();i++) {
-			if (i < prev_pos) continue;
-			if ((pos = std::min(str_.find("\n", i), std::min(str_.find(" ", i), str_.find("\t", i)))) != std::string::npos) {
-				if (i == pos) {
-					prev_pos = i;
-					continue;
-				}
-				else {
-					pystring substr = str_.substr(prev_pos+1, pos - prev_pos - 1);
-					if (substr.length()) {
-						tokens.push_back(substr);
-						prev_pos = pos;
-					}
-				}
-			}
-		}
-		pystring last_substr = str_.substr(prev_pos+1);
-		if (prev_pos < str_.length() && last_substr.length()) tokens.push_back(last_substr);
-		return tokens;
-	}
+        for (size_t i=0; i<str_.length();i++) {
+            if (i < prev_pos) continue;
+            if ((pos = std::min(str_.find("\n", i), std::min(str_.find(" ", i), str_.find("\t", i)))) != std::string::npos) {
+                if (i == pos) {
+                    prev_pos = i;
+                    continue;
+                }
+                else {
+                    pystring substr = str_.substr(prev_pos+1, pos - prev_pos - 1);
+                    if (substr.length()) {
+                        tokens.push_back(substr);
+                        prev_pos = pos;
+                    }
+                }
+            }
+        }
+        pystring last_substr = str_.substr(prev_pos+1);
+        if (prev_pos < str_.length() && last_substr.length()) tokens.push_back(last_substr);
+        return tokens;
+    }
 
     pystring replace(std::string old_substr, std::string new_substr) {
         size_t pos = 0;
-		while ((pos = str_.find(old_substr, pos)) != std::string::npos) {
-			str_.replace(pos, old_substr.length(), new_substr);
-			pos += new_substr.length(); // 更新位置以继续搜索
-		}
-		return str_;
+        while ((pos = str_.find(old_substr, pos)) != std::string::npos) {
+            str_.replace(pos, old_substr.length(), new_substr);
+            pos += new_substr.length(); // 更新位置以继续搜索
+        }
+        return str_;
     }
 
     pystring replace(pystring old_substr, pystring new_substr) {
@@ -245,21 +285,21 @@ public:
 
     bool isdigit() {
         for (char c : str_) if (!std::isdigit(c)) return false;
-	    return true;
+        return true;
     }
 
     pystring ljust(int length) {
         std::string ret = str_;
-		if (str_.length()>=length) return str_;
-		for (int i=0;i<length-str_.length();i++) ret += " ";
-		return ret;
+        if (str_.length()>=length) return str_;
+        for (int i=0;i<length-str_.length();i++) ret += " ";
+        return ret;
     }
 
     pystring rjust(int length) {
         std::string ret = str_;
-		if (str_.length()>=length) return str_;
-		for (int i=0;i<length-str_.length();i++) ret = " " + ret;
-		return ret;
+        if (str_.length()>=length) return str_;
+        for (int i=0;i<length-str_.length();i++) ret = " " + ret;
+        return ret;
     }
 
     const std::string str() {
