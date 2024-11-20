@@ -132,8 +132,16 @@ class ArgumentParser
     std::vector<argument> named_arguments;
     std::vector<argument> arguments;
 
+    int argc_=0;
+    char** argv_=nullptr;
+
   public:
-    ArgumentParser(std::string description) : description(std::move(description)) {}
+    // ArgumentParser(std::string description="") : description(std::move(description)) {}
+
+    ArgumentParser(std::string description="", int argc=0, char** argv=nullptr)
+    : description(std::move(description))
+    , argc_(argc)
+    , argv_(argv) {}
 
     ArgumentParser &set_program_name(std::string name)
     {
@@ -315,6 +323,16 @@ class ArgumentParser
         check_add_argument_name<T>(name);
         named_arguments.emplace_back(std::move(name), std::move(help), type_string<T>());
         return *this;
+    }
+
+    bool isOptionDefined(const std::string &name)
+    {
+        auto pos = find_option_sname(name);
+        if (pos == options.cend())
+        {
+            pos = find_option_lname(name);
+        }
+        return (pos != options.cend());
     }
 
     template <typename T>
@@ -522,6 +540,16 @@ class ArgumentParser
         {
             arguments[i].value = tokens[i];
         }
+        return *this;
+    }
+
+    ArgumentParser &parse()
+    {
+        if (argv_ != nullptr)
+        {
+            return parse(argc_, argv_);
+        }
+        std::cerr << "no argv received, failed to parse" << std::endl;
         return *this;
     }
 
