@@ -12,6 +12,7 @@
 #include "./str.h"
 #include "./os.h"
 #include "./datetime.h"
+#include "./argparser.h"
 #include <functional>
 
 
@@ -49,7 +50,9 @@
 #define logsetTimeColor logger.setTimeColor
 #define logsetStdoutFuncNameShow logger.setStdoutFuncNameShow
 #define logsetShowLocation logger.setLocationShow
-
+#define logsetFromParser logger.setFromParser
+#define logadd2Parser logger.addLogParser
+#define logaddAndSetFromParser logger.addAndSetFromParser
 
 
 enum LogLevel
@@ -323,6 +326,47 @@ public:
         }
         return nullptr;
     }
+
+    void addLogParser(argparser::ArgumentParser& parser, int defaultLogLevel=0, int defaultShowLevel=0)
+    {
+        parser.add_option<std::string>("", "--add-log", "log file name", "");
+        parser.add_option<int>("", "--log-level", "log level (0: debug, 1: info, 2: success, 3: warning, 4: error)", std::move(defaultLogLevel));
+        parser.add_option<int>("", "--show-level", "show log level, same as log level", std::move(defaultShowLevel));
+    }
+
+    void setFromParser(argparser::ArgumentParser& parser)
+    {
+        if (!parser.isOptionDefined("--add-log")||!parser.isOptionDefined("--log-level")||!parser.isOptionDefined("--show-level"))
+        {
+            error("no required option, please check" ,LOG_LOC);
+            return;
+        }
+        
+        std::string logfile = parser.get_option_string("--add-log");
+        int level = parser.get_option_int("--log-level");
+        setStdoutLevel(parser.get_option_int("--show-level"));
+        if (add(logfile, (LogLevel)level)) 
+        {
+            auto filelogger = getLogByName(logfile);
+            filelogger->pathtype = LOG_PATH_ABS;
+        }
+    }
+
+    void addAndSetFromParser(argparser::ArgumentParser& parser, int defaultLogLevel=0, int defaultShowLevel=0)
+    {
+        addLogParser(parser, defaultLogLevel, defaultShowLevel);
+        parser.parse();
+        std::string logfile = parser.get_option_string("--add-log");
+        int level = parser.get_option_int("--log-level");
+        setStdoutLevel(parser.get_option_int("--show-level"));
+        if (add(logfile, (LogLevel)level)) 
+        {
+            auto filelogger = getLogByName(logfile);
+            filelogger->pathtype = LOG_PATH_ABS;
+        }
+    }
+
+    
 
 private:
     bool show_location=true;
