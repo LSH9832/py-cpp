@@ -72,12 +72,12 @@ static std::string __parse_scalar(YAML::Node config)
     return oss.str();
 }
 
-static std::string show(YAML::Node& config, bool show_inside=false)
+static std::string show(YAML::Node& config, tabulate::TableStyle style=TS_FANCY_OUTLINE, bool show_inside=false)
 {
     std::vector<pystring> subConfigsKey;
     tabulate::Table t;
     // t.clear();
-    t.setDefaultStyle(TS_MIXED_OUTLINE);
+    t.setDefaultStyle(style);
     t.setAlign({TA_LEFT, TA_LEFT});
     t.setHead() << "Keys" << "Values" << t.endLine();
     for (const auto& key_value : config) {
@@ -88,7 +88,7 @@ static std::string show(YAML::Node& config, bool show_inside=false)
         if (value.IsMap()) 
         {
             t.setContent() << key << "<dict>, see 'Table for " + key + "'" << t.endLine();
-            pystring this_string = "\n Table for " + key + "\n" + show(value, false);
+            pystring this_string = "\n Table for " + key + "\n" + show(value, style, false);
             subConfigsKey.push_back(this_string.replace("\n", "\n    "));
         }
         else if (value.IsScalar()) {
