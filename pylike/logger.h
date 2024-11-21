@@ -512,7 +512,7 @@ private:
             error(LOG_LOC) << "failed to open " << filepath << end();
             return;
         }
-        outfile << msg << std::endl; // 写入文件
+        outfile << msg + "\n"; // 写入文件
         outfile.close(); // 关闭文件
 
         // pystring command = pystring("echo '") + msg + "' >> " + filepath;
