@@ -5,7 +5,9 @@ all files are h files, just add to your project and include them and start your 
 now supports:
 - os::path::XXX, os::makedirs, os::getcwd
 - str in python (class pystring) (startswith, endswith, split, replace, zfill, ljust, rjust, lower, upper)  convert to std::string -> pystring::str, convert to char* pystring::c_str
-- logger (package loguru), usage:
+- logger (package loguru)
+- tabulate (pcakage tabulate)
+#### usage:
 ```cpp
 #include <pylike/logger.h>
 #include <pylike/str.h>
