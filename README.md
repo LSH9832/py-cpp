@@ -1,7 +1,7 @@
-# easycpp: make you coding c++ easier
+# py-cpp: make you coding c++ easier just like python
 all files are h files, just add to your project and include them and start your easier coding!
 ## modules
-### pylike: code your c++ code like python
+### pylike
 now supports:
 - os::path::XXX, os::makedirs, os::getcwd
 - str in python (class pystring) (startswith, endswith, split, replace, zfill, ljust, rjust, lower, upper)  convert to std::string -> pystring::str, convert to char* pystring::c_str
