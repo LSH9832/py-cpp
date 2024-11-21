@@ -9,8 +9,12 @@ now supports:
 ```cpp
 #include <pylike/logger.h>
 #include <pylike/str.h>
+#include <pylike/tabulate.h>
+
+
 int main()
 {
+    // 1.logger
     // stdout settings
     logsetMsgColored(true);   // default is true
     logsetStdoutLevel(LOG_LEVEL_DEBUG); // default is LOG_LEVEL_DEBUG
@@ -38,6 +42,20 @@ int main()
     DEBUG << "find something wrong" << ENDL;
     SUCCESS << "done!" << 5.678 << ENDL;
 
+    // 2.tabulate
+    TCLEAR;
+    TH;
+    TABLE << "Key"   << "Value" << TENDL;
+    TL << "count" << 1       << TENDL;
+    TL;
+    TABLE << "path" << "/path/to/your/config/file";
+    TABLE << 1234567;
+    TABLE << TENDL;
+
+    TSetAlign({TA_LEFT, TA_CENTER});
+    TSetStyle(TS_FANCY_GRID);
+    INFO << "table:\n" << TSHOW() << ENDL;
+
     return 0;
 }
 ```
@@ -45,18 +63,26 @@ int main()
 output in terminal and file is
 
 ```
-2024-04-30 10:44:49.343 | DEBUG    | main.cpp:20:<main> - test0
-2024-04-30 10:44:49.343 | INFO     | main.cpp:21:<main> - test define loginfo 123
-2024-04-30 10:44:49.344 | SUCCESS  | main.cpp:22:<main> - test success
-2024-04-30 10:44:49.344 | WARNING  | main.cpp:23:<main> - test2
-2024-04-30 10:44:49.344 | ERROR    | main.cpp:24:<main> - 123
+2024-04-30 10:44:49.343 | DEBUG    | main.cpp:24:<main> - test0
+2024-04-30 10:44:49.343 | INFO     | main.cpp:25:<main> - test define loginfo 123
+2024-04-30 10:44:49.344 | SUCCESS  | main.cpp:26:<main> - test success
+2024-04-30 10:44:49.344 | WARNING  | main.cpp:27:<main> - test2
+2024-04-30 10:44:49.344 | ERROR    | main.cpp:28:<main> - 123
 456
 789
 3.141593
-2024-04-30 10:44:49.344 | INFO     | main.cpp:26:<main> - test good 123
-2024-04-30 10:44:49.345 | WARNING  | main.cpp:27:<main> - sounds not good456
-2024-04-30 10:44:49.345 | ERROR    | main.cpp:28:<main> - feels bad555
-2024-04-30 10:44:49.345 | DEBUG    | main.cpp:29:<main> - find something wrong
-2024-04-30 10:44:49.345 | SUCCESS  | main.cpp:30:<main> - done!5.678
+2024-04-30 10:44:49.344 | INFO     | main.cpp:30:<main> - test good 123
+2024-04-30 10:44:49.345 | WARNING  | main.cpp:31:<main> - sounds not good456
+2024-04-30 10:44:49.345 | ERROR    | main.cpp:32:<main> - feels bad555
+2024-04-30 10:44:49.345 | DEBUG    | main.cpp:33:<main> - find something wrong
+2024-04-30 10:44:49.345 | SUCCESS  | main.cpp:34:<main> - done!5.678
+2024-04-30 10:44:49.346 | SUCCESS  | main.cpp:34:<main> - table:
+╒═══════╤═══════════════════════════════════╤═════════╕
+│ Key   │               Value               │         │
+╞═══════╪═══════════════════════════════════╪═════════╡
+│ count │                 1                 │         │
+├───────┼───────────────────────────────────┼─────────┤
+│ path  │ /home/lsh/code/cpp/perception_ros │ 1234567 │
+╘═══════╧═══════════════════════════════════╧═════════╛
 ```
 
