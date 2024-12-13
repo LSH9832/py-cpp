@@ -61,6 +61,121 @@ namespace np
     
         return indices;  
     }
+
+    template <class T>
+    class Array
+    {
+    public:
+        Array(std::vector<int> dims, bool create=false): dims_(dims)
+        {
+            if(create)
+            {
+                long sz = 1;
+                for (int&d: dims) sz *= d;
+                data_ = new T[sz];
+            }
+            updateSize();
+        }
+
+        Array(std::vector<int> dims, T* data)
+        : dims_(dims)
+        , data_(data)
+        {
+            updateSize();
+        }
+
+        void setData(T* data)
+        {
+            if (data_ != nullptr)
+            {
+                delete data_;
+                // data_ = nullptr;
+                data_ = data;
+            }
+        }
+
+        std::vector<int> shape()
+        {
+            std::vector<int> ret;
+            for(int i=parent_idx_.size();i<dims_.size();i++)
+            {
+                ret.push_back(dims_[i]);
+            }
+            return ret;
+        }
+
+        Array<T> ascontiguousarray()
+        {
+            if (parent_idx_.size())
+            {
+                // do something
+            }
+            else return *this;
+        }
+
+        T at(std::vector<int> location)
+        {
+            if (psz_ + location.size() == dsz_)
+            {
+                int idx = 0;
+                // int kk = 1;
+                
+                for (int i=0;i<dsz;i++)
+                {
+                    if (i)
+                    {
+                        idx *= dims_[i];
+                    }
+
+                    if (i < psz)
+                    {
+                        idx += parent_idx_[i];
+                    }
+                    else
+                    {
+                        idx += location[i-psz]
+                    }
+                }
+            }
+            else
+            {
+                std::cerr << "[E] should be with shape " << shape().size() 
+                          << "but got " << location.size() << std::endl;
+                throw std::out_of_range("Invalid location for array access");
+            }
+        }
+
+        Array<T> subArray(std::vector<int> location)
+        {
+            Array<T> ret = Array<T>(dims_, data_);
+            std::vector<int> idx = parent_idx_;
+            idx.insert(idx.end(), location.begin(), location.end());
+            ret.__setParentIdx(idx);
+            return ret;
+        }
+        
+        /**
+         * do not use this function!!!!!!!
+         */
+        void __setParentIdx(std::vector<int> idx)
+        {
+            parent_idx_ = idx;
+            updateSize();
+        }
+
+    private:
+
+        void updateSize()
+        {
+            psz_ = parent_idx_.size();
+            dsz_ = dims_.size();
+        }
+
+        int psz_=0, dsz_=0;
+
+        std::vector<int> dims_, parent_idx_={};
+        T* data_=nullptr;
+    };
 }
 
 #endif
