@@ -120,20 +120,20 @@ namespace np
                 int idx = 0;
                 // int kk = 1;
                 
-                for (int i=0;i<dsz;i++)
+                for (int i=0;i<dsz_;i++)
                 {
                     if (i)
                     {
                         idx *= dims_[i];
                     }
 
-                    if (i < psz)
+                    if (i < psz_)
                     {
                         idx += parent_idx_[i];
                     }
                     else
                     {
-                        idx += location[i-psz]
+                        idx += location[i-psz_]
                     }
                 }
             }
@@ -141,7 +141,6 @@ namespace np
             {
                 std::cerr << "[E] should be with shape " << shape().size() 
                           << "but got " << location.size() << std::endl;
-                throw std::out_of_range("Invalid location for array access");
             }
         }
 
@@ -151,6 +150,45 @@ namespace np
             std::vector<int> idx = parent_idx_;
             idx.insert(idx.end(), location.begin(), location.end());
             ret.__setParentIdx(idx);
+            return ret;
+        }
+        
+        //  location[dim] = -1
+        int argmaxAt(int dim, std::vector<int> location)
+        {
+            int ret = 0;
+            location[dim] = ret;
+            T maxValue = at(location);
+            T currentValue = maxValue;
+            for (int i=1;i<dims_[dim];i++)
+            {
+                location[dim] = i;
+                currentValue = at(location);
+                if (maxValue < currentValue)
+                {
+                    ret = i;
+                    maxValue = currentValue;
+                }
+            }
+            return ret;
+        }
+
+        int argminAt(int dim, std::vector<int> location)
+        {
+            int ret = 0;
+            location[dim] = ret;
+            T minValue = at(location);
+            T currentValue = minValue;
+            for (int i=1;i<dims_[dim];i++)
+            {
+                location[dim] = i;
+                currentValue = at(location);
+                if (minValue > currentValue)
+                {
+                    ret = i;
+                    minValue = currentValue;
+                }
+            }
             return ret;
         }
         
