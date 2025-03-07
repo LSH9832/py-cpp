@@ -38,10 +38,19 @@
 #define WARN logger.warning(LOG_LOC)
 #define ERROR logger.error(LOG_LOC)
 #define CONTINUELOG logger.info({}, false)
-#define ENDL logger.end()
-#define ENDLOG logger.end();
-#define LOGSHOW logger.end(false)
-#define LOGSHOW_IGNORE_LEVEL logger.end(false, true)
+
+#if defined(_WIN32) || defined(_WIN64)
+    #define ENDL "";logger.end()
+    #define ENDLOG "";logger.end();
+    #define LOGSHOW "";logger.end(false)
+    #define LOGSHOW_IGNORE_LEVEL "";logger.end(false, true)
+#else
+    #define ENDL logger.end()
+    #define ENDLOG logger.end();
+    #define LOGSHOW logger.end(false)
+    #define LOGSHOW_IGNORE_LEVEL logger.end(false, true)
+#endif
+
 
 #define logsetMsgColored logger.setMsgColored
 #define logsetStdoutLevel logger.setStdoutLevel
