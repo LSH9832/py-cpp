@@ -12,7 +12,8 @@
   #define MAX(a,b)  ((a) < (b) ? (b) : (a))
 #endif
 
-class pystring {
+class pystring 
+{
 
     std::string str_;
 
@@ -28,6 +29,12 @@ public:
 
     pystring(const char * str) {
         str_ = str;
+    }
+
+    pystring(bool str)
+    {
+        if (str) str_ = "true";
+        else str_ = "false";
     }
 
     pystring(int str)
@@ -94,7 +101,7 @@ public:
         str_ += c;
     }
 
-    char operator[](int idx){
+    char& operator[](int idx){
         return str_[idx<0?str_.length()+idx:idx];
     }
 
@@ -124,6 +131,11 @@ public:
         {
             return true;
         }
+    }
+
+    pystring substr(int start, int end)
+    {
+        return str_.substr(start, end);
     }
 
     pystring operator*(int value) {
