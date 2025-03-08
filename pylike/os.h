@@ -2,8 +2,13 @@
 #ifndef PYTHONLIKE_OS_H
 #define PYTHONLIKE_OS_H
 
-#include <stdio.h>
+#if defined(_WIN32) || defined(_WIN64)
+#include <Windows.h>
+#else
 #include <unistd.h>
+#endif
+
+#include <stdio.h>
 #include <iostream>
 #include <vector>
 #include <string>
@@ -25,11 +30,22 @@ bool pyin(T element, std::vector<T> list) {
 
 
 static pystring _pycwd_() {
+#if defined(_WIN32) || defined(_WIN64)
     // char buff[FILENAME_MAX];
-    char* buff;//= new char[FILENAME_MAX];
+    // char buffer[MAX_PATH];
+    char* buffer = new char[MAX_PATH];
+    DWORD dwRetVal = GetCurrentDirectoryW(MAX_PATH, (LPWSTR)buffer);
+    if (dwRetVal == 0) {
+        std::cerr << "GetCurrentDirectory failed (" << GetLastError() << ")\n";
+        return "";
+    }
+    return pystring(buffer);
+#else
+    char* buff = new char[FILENAME_MAX];
     pystring currPath = getcwd(buff, FILENAME_MAX);
     currPath = currPath.replace("\\", "/");
     return currPath;
+#endif
 }
 
 
@@ -60,7 +76,8 @@ T pymax(std::vector<T> elements) {
 }
 
 
-namespace os {
+namespace os 
+{
 
     static pystring getcwd() {
         return _pycwd_();
@@ -131,7 +148,7 @@ namespace os {
             auto paths = abspath(path).split("/");
             auto cwdpaths = (rpath.length()?rpath:os::getcwd()).split("/");
             int i = 0;
-            int count = pymin(paths.size(), cwdpaths.size());
+            int count = (int)pymin(paths.size(), cwdpaths.size());
 
             while (i < count) {
                 if (paths[i] == cwdpaths[i]) i++;
@@ -292,13 +309,37 @@ namespace os {
 
             if (path[i] == '/' ||  path[i] == '\\') {
                 if (hasLetter) {
-                    if (!path::exist(_path)) mkdir(_path.c_str(), 0755);
+                    if (!path::exist(_path)) 
+                    {
+#if defined(_WIN32) || defined(_WIN64)
+                        if (!CreateDirectoryW((LPCWSTR)_path.c_str(), NULL)) {
+                            if (GetLastError() != ERROR_ALREADY_EXISTS) {
+                                std::cerr << "CreateDirectory failed (" << GetLastError() << ")\n";
+                                return;
+                            }
+                        }
+#else
+                        mkdir(_path.c_str(), 0755);
+#endif
+                    }
                 }
             }
             _path += path[i];
         }
         if (hasLetter) {
-            if (!path::exist(path)) mkdir(path.c_str(), 0755);
+            if (!path::exist(path)) 
+            {
+#if defined(_WIN32) || defined(_WIN64)
+                if (!CreateDirectoryW((LPCWSTR)path.c_str(), NULL)) {
+                    if (GetLastError() != ERROR_ALREADY_EXISTS) {
+                        std::cerr << "CreateDirectory failed (" << GetLastError() << ")\n";
+                        return;
+                    }
+                }
+#else
+                mkdir(path.c_str(), 0755);
+#endif
+            }
         }
     }
     
