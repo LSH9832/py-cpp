@@ -12,7 +12,7 @@
 #include "./str.h"
 #include "./os.h"
 #include "./datetime.h"
-#include "./argparser.h"
+#include "./argparse.h"
 #include <functional>
 
 
@@ -41,11 +41,13 @@
 
 #if defined(_WIN32) || defined(_WIN64)
     #define ENDL "";logger.end()
+    #define ENDLALL "";logger.endAll()
     #define ENDLOG "";logger.end();
     #define LOGSHOW "";logger.end(false)
     #define LOGSHOW_IGNORE_LEVEL "";logger.end(false, true)
 #else
     #define ENDL logger.end()
+    #define ENDLALL logger.endAll()
     #define ENDLOG logger.end();
     #define LOGSHOW logger.end(false)
     #define LOGSHOW_IGNORE_LEVEL logger.end(false, true)
@@ -65,6 +67,10 @@
 #define logsetFromParser logger.setFromParser
 #define logadd2Parser logger.addLogParser
 #define logaddAndSetFromParser logger.addAndSetFromParser
+
+#define logsetFromParser2 logger.setFromParser2
+#define logadd2Parser2 logger.addLogParser2
+#define logaddAndSetFromParser2 logger.addAndSetFromParser2
 
 
 enum LogLevel
@@ -320,6 +326,14 @@ public:
     }
 
     pystring end(bool write2file=true, bool force_show=false) {
+        end_all = false;
+        pystring oss_str = oss.str();
+        _log(oss_level, oss_str, write2file, force_show);
+        return "";
+    }
+
+    pystring endAll(bool write2file=true, bool force_show=false) {
+        end_all = true;
         pystring oss_str = oss.str();
         _log(oss_level, oss_str, write2file, force_show);
         return "";
@@ -378,8 +392,51 @@ public:
         }
     }
 
+    template <class Parser>
+    void addLogParser2(Parser& parser, int defaultLogLevel=0, int defaultShowLevel=0)
+    {
+        parser.add_argument({"--add-log"}, "", "log file name");
+        parser.add_argument({"--log-level"}, std::move(defaultLogLevel), "log level (0: debug, 1: info, 2: success, 3: warning, 4: error)");
+        parser.add_argument({"--show-level"}, std::move(defaultShowLevel), "show log level, same as log level");
+    }
+
+    template <class Parser>
+    void setFromParser2(Parser& parser)
+    {
+        if (!parser["add-log"].isValid()||!parser["log-level"].isValid()||!parser["show-level"].isValid())
+        {
+            error("no required option, please check" ,LOG_LOC);
+            return;
+        }
+
+        std::string logfile = parser["add-log"].as<std::string>();
+        int level = parser["log-level"].as<int>();
+        setStdoutLevel(parser["show-level"].as<int>());
+        if (add(logfile, (LogLevel)level)) 
+        {
+            auto filelogger = getLogByName(logfile);
+            filelogger->pathtype = LOG_PATH_ABS;
+        }
+    }
+
+    template <class Parser>
+    void addAndSetFromParser2(Parser& parser, int defaultLogLevel=0, int defaultShowLevel=0)
+    {
+        addLogParser2(parser, defaultLogLevel, defaultShowLevel);
+        parser.parse_args();
+        std::string logfile = parser["add-log"].as<std::string>();
+        int level = parser["log-level"].as<int>();
+        setStdoutLevel(parser["show-level"].as<int>());
+        if (add(logfile, (LogLevel)level)) 
+        {
+            auto filelogger = getLogByName(logfile);
+            filelogger->pathtype = LOG_PATH_ABS;
+        }
+    }
+
 private:
     bool show_location=true;
+    bool end_all = false;
     std::vector<SingleLog> logs;
     SingleLog stdoutLog;
 
@@ -531,6 +588,7 @@ private:
 
     void __logfile(LogLevel level, pystring msg, datetime::Datetime d, std::vector<pystring> loc) {
         for (SingleLog& log: logs) {
+            // std::cout << "write log" << std::endl;
             writeOneLog(log, level, msg, d, loc);
         }
     }
@@ -538,16 +596,23 @@ private:
     void _log(LogLevel level, pystring msg, bool write2file=true, bool force_show=false) {
         datetime::Datetime d = datetime::datetime::now();
         std::vector<pystring> loc = location_;
-        writeOneLog(stdoutLog, level, msg, d, loc, force_show);
-
         // std::thread _ts(std::mem_fn(&Logger::writeOneLog), this, std::ref(stdoutLog), level, msg, d, loc);
         // _ts.detach();
+        std::thread _t;
         if(write2file)
         {
-            std::thread _t(std::mem_fn(&Logger::__logfile), this, level, msg, d, loc);
-            _t.detach();
+            // std::cout << "write log" << std::endl;
+            _t = std::thread(std::mem_fn(&Logger::__logfile), this, level, msg, d, loc);
+            // _t.join();
+            // std::cout << "write log end" << std::endl;
+            
         }
-        
+        writeOneLog(stdoutLog, level, msg, d, loc, force_show);
+        if(write2file)
+        {
+            if (end_all) _t.join();
+            else _t.detach();
+        }
     }
 
 };
