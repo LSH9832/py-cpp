@@ -220,6 +220,7 @@ public:
     }
 
     std::vector<pystring> split(std::string delimiter) {
+        if (str_.empty()) return {""};
         std::vector<pystring> tokens;
         size_t pos = 0;
         std::string::size_type prev_pos = 0;
@@ -241,6 +242,7 @@ public:
     }
 
     std::vector<pystring> split() {
+        if (str_.empty()) return {""};
         std::vector<pystring> tokens;
         size_t pos = 0;
         int prev_pos = -1;
