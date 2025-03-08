@@ -1,3 +1,7 @@
+/**
+ * Author: https://github.com/LSH9832
+ * 感谢 https://github.com/0382, 本代码借鉴了 https://github.com/0382/util/blob/main/cpp/argparse/argparse.hpp 思路并完全重构
+ */
 #pragma once
 #ifndef ARGPARSE_H
 #define ARGPARSE_H
