@@ -122,14 +122,19 @@ public:
     }
 
     operator bool() const {
-        auto s = pystring(str_).lower().str();
+        auto s = pystring(str_).lower();
         if (s == "false" || s == "0")
         {
             return false;
         }
-        else if (s == "true" || s == "1")
+        else if (s == "true" || (s.isdigit() && (((int)s) > 0)))
         {
             return true;
+        }
+        else
+        {
+            std::cerr << "can not convert '" << str_ << "' to bool" << std::endl;
+            exit(-1);
         }
     }
 
