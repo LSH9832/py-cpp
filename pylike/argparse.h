@@ -124,6 +124,54 @@ namespace argparse
             return (T)((useDefault?defaultValues_:values_)[0]);
         }
 
+        operator int() const {
+            if (isNargs_ && (useDefault?defaultValues_:values_).size() > 1) 
+            {
+                WARN << name_ << " is a list, use asList() instead of as(), return first value of the list" << ENDL;
+            }
+            return (int)((useDefault?defaultValues_:values_)[0]);
+        }
+    
+        operator float() const {
+            if (isNargs_ && (useDefault?defaultValues_:values_).size() > 1) 
+            {
+                WARN << name_ << " is a list, use asList() instead of as(), return first value of the list" << ENDL;
+            }
+            return (float)((useDefault?defaultValues_:values_)[0]);
+        }
+    
+        operator double() const {
+            if (isNargs_ && (useDefault?defaultValues_:values_).size() > 1) 
+            {
+                WARN << name_ << " is a list, use asList() instead of as(), return first value of the list" << ENDL;
+            }
+            return (double)((useDefault?defaultValues_:values_)[0]);
+        }
+    
+        operator std::string() const {
+            if (isNargs_ && (useDefault?defaultValues_:values_).size() > 1) 
+            {
+                WARN << name_ << " is a list, use asList() instead of as(), return first value of the list" << ENDL;
+            }
+            return (std::string)((useDefault?defaultValues_:values_)[0]);
+        }
+
+        operator pystring() const {
+            if (isNargs_ && (useDefault?defaultValues_:values_).size() > 1) 
+            {
+                WARN << name_ << " is a list, use asList() instead of as(), return first value of the list" << ENDL;
+            }
+            return (pystring)((useDefault?defaultValues_:values_)[0]);
+        }
+    
+        operator bool() const {
+            if (isNargs_ && (useDefault?defaultValues_:values_).size() > 1) 
+            {
+                WARN << name_ << " is a list, use asList() instead of as(), return first value of the list" << ENDL;
+            }
+            return (bool)((useDefault?defaultValues_:values_)[0]);
+        }
+
         template <class T>
         std::vector<T> asList()
         {
