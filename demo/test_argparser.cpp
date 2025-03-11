@@ -10,11 +10,11 @@ argparse::ArgumentParser getArgs(int argc, char** argv)
     parser.add_argument({"version"}, true, "software version");   // positional argument
 
     // the following are optional arguments
-    parser.add_argument({"-s", "--source"}, "/dev/video0", "video source");
-    parser.add_argument({"-sz", "--imgsz"}, std::vector<int>{640, 640}, "image size", "+");
-    parser.add_argument({"--show"}, STORE_TRUE, "show image");
-    parser.add_argument({"--num-images"}, 512, "number of images");
-    parser.add_argument({"-c", "--confidence"}, 0.25f, "confidence threshold");
+    parser.add_argument({"-s", "--source"}, "/dev/video0", "video source");                    // string
+    parser.add_argument({"-sz", "--imgsz"}, std::vector<int>{640, 640}, "image size", "+");    // std::vector<int>
+    parser.add_argument({"--show"}, STORE_TRUE, "show image");                                 // bool
+    parser.add_argument({"--num-images"}, 512, "number of images");                            // int
+    parser.add_argument({"-c", "--confidence"}, 0.25f, "confidence threshold");                // float or double
 
     logaddAndSetFromParser2(parser, LOG_LEVEL_INFO, LOG_LEVEL_DEBUG);  // if need logger
     return parser; //.parse_args();
