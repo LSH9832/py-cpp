@@ -1,7 +1,7 @@
 #ifndef TEST_ARGPARSER_CPP
 #define TEST_ARGPARSER_CPP
 
-#include "pylike/argparse2.h"
+#include "pylike/argparse.h"
 
 
 argparse::ArgumentParser getArgs(int argc, char** argv)
