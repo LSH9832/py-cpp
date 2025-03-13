@@ -409,9 +409,9 @@ public:
             return;
         }
 
-        std::string logfile = parser["add-log"].as<std::string>();
-        int level = parser["log-level"].as<int>();
-        setStdoutLevel(parser["show-level"].as<int>());
+        std::string logfile = parser["add-log"];
+        int level = parser["log-level"];
+        setStdoutLevel((int)parser["show-level"]);
         if (add(logfile, (LogLevel)level)) 
         {
             auto filelogger = getLogByName(logfile);
@@ -424,9 +424,9 @@ public:
     {
         addLogParser2(parser, defaultLogLevel, defaultShowLevel);
         parser.parse_args();
-        std::string logfile = parser["add-log"].as<std::string>();
-        int level = parser["log-level"].as<int>();
-        setStdoutLevel(parser["show-level"].as<int>());
+        std::string logfile = parser["add-log"];
+        int level = parser["log-level"];
+        setStdoutLevel((int)parser["show-level"]);
         if (add(logfile, (LogLevel)level)) 
         {
             auto filelogger = getLogByName(logfile);
