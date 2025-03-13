@@ -9,10 +9,6 @@
 #include <iostream>
 #include "./logger.h"
 
-#if defined(_WIN32) || defined(_WIN64)
-#else
-#include <unordered_map>
-#endif
 
 #define STORE_TRUE argparse::ACTION_OPT::True
 #define STORE_FALSE argparse::ACTION_OPT::False
@@ -250,19 +246,12 @@ namespace argparse
             }
 
             pystring name = longName.substr(2, longName.length());
-#if defined(_WIN32) || defined(_WIN64)
             args_.push_back(OneArgument(shortName, longName, (action==ACTION_OPT::True)?"false":"true", help, false, false, "1", true));
-#else
-            argsMap_.insert({name, OneArgument(shortName, longName, (action==ACTION_OPT::True)?"false":"true", help, false, false, "1", true)});
-#endif
+
             if (!shortName.empty()) 
             {
                 snames.push_back(shortName);
                 maxSlen = (shortName.length()>maxSlen)?shortName.length():maxSlen;
-#if defined(_WIN32) || defined(_WIN64)
-#else
-                namesMap_.insert({shortName, name});
-#endif
             }
             maxLlen = (longName.length()>maxLlen)?longName.length():maxLlen;
             this->names.push_back(name);
@@ -294,19 +283,13 @@ namespace argparse
                 exit(-1);
             }
             pystring name = isPos?longName:longName.substr(2, longName.length());
-#if defined(_WIN32) || defined(_WIN64)
+
             args_.push_back(OneArgument(shortName, longName, default_value, help, false, isPos, nargs));
-#else
-            argsMap_.insert({name, OneArgument(shortName, longName, default_value, help, false, isPos, nargs)});
-#endif
+
             if (!shortName.empty()) 
             {
                 snames.push_back(shortName);
                 maxSlen = (shortName.length()>maxSlen)?shortName.length():maxSlen;
-#if defined(_WIN32) || defined(_WIN64)
-#else
-                namesMap_.insert({shortName, name});
-#endif
             }
             maxLlen = (longName.length()>maxLlen)?longName.length():maxLlen;
             this->names.push_back(name);
@@ -335,19 +318,12 @@ namespace argparse
                 numPosArgs++;
                 posNames.push_back(name);
             }
-#if defined(_WIN32) || defined(_WIN64)
             args_.push_back(OneArgument(shortName, longName, "", help, isPos?true:required, isPos, nargs));
-#else
-            argsMap_.insert({name, OneArgument(shortName, longName, "", help, isPos?true:required, isPos, nargs)});
-#endif
+
             if (!shortName.empty()) 
             {
                 snames.push_back(shortName);
                 maxSlen = (shortName.length()>maxSlen)?shortName.length():maxSlen;
-#if defined(_WIN32) || defined(_WIN64)
-#else
-                namesMap_.insert({shortName, name});
-#endif
             }
             maxLlen = (longName.length()>maxLlen)?longName.length():maxLlen;
             this->names.push_back(name);
@@ -383,19 +359,12 @@ namespace argparse
                 if (i) oss << " ";
                 oss << default_value[i];
             }
-#if defined(_WIN32) || defined(_WIN64)
             args_.push_back(OneArgument(shortName, longName, oss.str(), help, false, isPos, nargs));
-#else
-            argsMap_.insert({name, OneArgument(shortName, longName, oss.str(), help, false, isPos, nargs)});
-#endif
+
             if (!shortName.empty()) 
             {
                 snames.push_back(shortName);
                 maxSlen = (shortName.length()>maxSlen)?shortName.length():maxSlen;
-#if defined(_WIN32) || defined(_WIN64)
-#else
-                namesMap_.insert({shortName, name});
-#endif
             }
             maxLlen = (longName.length()>maxLlen)?longName.length():maxLlen;
             this->names.push_back(name);
@@ -474,7 +443,6 @@ namespace argparse
                             showHelpMsg();
                             exit(-1);
                         }
-#if defined(_WIN32) || defined(_WIN64)
                         // INFO << "finding arg info" << ENDL;
                         for (OneArgument nowarg: args_)
                         {
@@ -494,9 +462,7 @@ namespace argparse
                             }
                         }
                         // INFO << "finding arg info end" << ENDL;
-#else
-                        currentName = namesMap_[arg];
-#endif
+
                     }
 
                     if (at(currentName).isBool_)
@@ -558,9 +524,9 @@ namespace argparse
             {
                 // ERROR << "no arg named " << name << "!" << ENDL;
                 // exit(-1);
-                return OneArgument();
+                // auto ret = OneArgument();
+                return unknown_arg;
             }
-#if defined(_WIN32) || defined(_WIN64)
             for (int i=0;i<args_.size();i++)
             {
                 if(args_[i].isPosArg())
@@ -578,10 +544,8 @@ namespace argparse
                     }
                 }
             }
-#else
-            return argsMap_[name];
-#endif
 
+            return unknown_arg;
         }
         
         OneArgument& operator[](pystring name){
@@ -771,13 +735,8 @@ namespace argparse
         std::vector<pystring> snames, names;
         std::vector<pystring> posNames;
 
-#if defined(_WIN32) || defined(_WIN64)
         std::vector<OneArgument> args_;
-#else
-        std::unordered_map<pystring, pystring> namesMap_={};
-        std::unordered_map<pystring, OneArgument> argsMap_={};
-#endif
-
+        OneArgument unknown_arg;
         int maxSlen=0, maxLlen=0;
         
     };
