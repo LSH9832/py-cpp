@@ -66,7 +66,7 @@ namespace np
     class Array
     {
     public:
-        Array(std::vector<int> dims, bool create=false): dims_(dims)
+        Array(std::vector<int> dims, bool create=false): dims_(dims), create_(create)
         {
             if(create)
             {
@@ -84,14 +84,20 @@ namespace np
             updateSize();
         }
 
+        ~Array()
+        {
+            if (create_) deleteData();
+        }
+
         void setData(T* data)
         {
             if (data_ != nullptr)
             {
                 delete data_;
                 // data_ = nullptr;
-                data_ = data;
             }
+            data_ = data;
+            create_ = false;
         }
 
         std::vector<int> shape()
@@ -133,14 +139,16 @@ namespace np
                     }
                     else
                     {
-                        idx += location[i-psz_]
+                        idx += location[i-psz_];
                     }
                 }
+                return data_[idx];
             }
             else
             {
                 std::cerr << "[E] should be with shape " << shape().size() 
                           << "but got " << location.size() << std::endl;
+                exit(-1);
             }
         }
 
@@ -201,6 +209,12 @@ namespace np
             updateSize();
         }
 
+        void deleteData()
+        {
+            delete data_;
+            data_ = nullptr;
+        }
+
     private:
 
         void updateSize()
@@ -213,6 +227,7 @@ namespace np
 
         std::vector<int> dims_, parent_idx_={};
         T* data_=nullptr;
+        bool create_=false;
     };
 }
 
